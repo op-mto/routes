@@ -1,0 +1,9 @@
+{
+  "users": [
+    { "id": 1, "login": "admin", "password": "admin123", "name": "Администратор", "role": "admin" },
+    { "id": 2, "login": "dispatcher", "password": "disp123", "name": "Диспетчер", "role": "dispatcher" },
+    { "id": 3, "login": "driver1", "password": "123", "name": "Петров Александр", "role": "driver" }
+  ],
+  "routes": [],
+  "settings": { "nextRouteId": 1, "nextUserId": 4, "addressHistory": { "from": [], "to": [] }, "mtkCounter": 1, "mtkDate": "" }
+}
