@@ -1,17 +1,18 @@
 var data = {
-    users: [
-        { id: 1, login: "admin", password: "admin123", name: "Администратор", role: "admin" },
-        { id: 2, login: "dispatcher", password: "disp123", name: "Диспетчер", role: "dispatcher" },
-        { id: 3, login: "driver1", password: "123", name: "Петров Александр", role: "driver" },
-        { id: 4, login: "driver2", password: "123", name: "Сидоров Михаил", role: "driver" }
-    ],
+    users: [],
     routes: [],
-    settings: { nextRouteId: 1, nextUserId: 5, addressHistory: { from: [], to: [] }, mtkCounter: 1, mtkDate: '' }
+    settings: { nextRouteId: 1, nextUserId: 4, addressHistory: { from: [], to: [] }, mtkCounter: 1, mtkDate: "" }
 };
 
 var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
+
+var GITHUB_TOKEN = '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';
+var REPO_OWNER = 'op-mto';
+var REPO_NAME = 'routes';
+var DATA_PATH = 'data.json';
+var DATA_SHA = '';
 
 function getCurrentDateTime() {
     var now = new Date();
@@ -25,21 +26,54 @@ function getCurrentDateTime() {
 }
 
 function loadData() {
-    var saved = localStorage.getItem('routesData');
-    if (saved) {
-        try {
-            var parsed = JSON.parse(saved);
-            if (parsed && parsed.users && parsed.routes && parsed.settings) {
-                data = parsed;
-                if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
-                if (!data.settings.mtkCounter) data.settings.mtkCounter = 1;
-            }
-        } catch(e) {}
-    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_PATH, true);
+    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
+    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            DATA_SHA = response.sha;
+            var content = decodeURIComponent(escape(atob(response.content)));
+            data = JSON.parse(content);
+            renderTable();
+        }
+    };
+    xhr.onerror = function() {
+        var saved = localStorage.getItem('routesData');
+        if (saved) { data = JSON.parse(saved); renderTable(); }
+    };
+    xhr.send();
 }
 
 function saveData() {
     localStorage.setItem('routesData', JSON.stringify(data));
+    saveToGitHub();
+}
+
+function saveToGitHub() {
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_PATH);
+    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    
+    var body = JSON.stringify({
+        message: 'Update data',
+        content: content,
+        sha: DATA_SHA
+    });
+    
+    xhr.onload = function() {
+        if (xhr.status === 200 || xhr.status === 201) {
+            var response = JSON.parse(xhr.responseText);
+            DATA_SHA = response.content.sha;
+            console.log('Saved to GitHub');
+        }
+    };
+    xhr.send(body);
 }
 
 function updateAddressHistory() {
@@ -179,7 +213,7 @@ function renderTable() {
         html += '<td>';
         if (r.task && r.task.indexOf('Globus ') === 0) {
             var fn = r.task.replace('Globus ', '');
-           html += '<a href="#" onclick="openLocalFile(\'' + fn + '\'); return false;">' + r.task + '</a>';
+            html += '<a href="#" onclick="openLocalFile(\'' + fn + '\'); return false;">' + r.task + '</a>';
         } else { html += (r.task||''); }
         html += '</td>';
         html += '<td>' + (r.note||'') + '</td><td class="' + sc + '">' + (r.status||'') + '</td>';
@@ -280,91 +314,20 @@ function openMTKBlank() {
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
     window.currentMTKFile = { name: fileName, path: 'mtk/' + fileName };
     data.settings.mtkCounter++; saveData();
-    
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
-    
     var tmp = document.createElement('textarea');
     tmp.value = fileName;
     document.body.appendChild(tmp);
     tmp.select();
     document.execCommand('copy');
     document.body.removeChild(tmp);
-    
     window.location.href = 'ms-excel:ofe|u|file:///' + window.location.pathname.replace('index.html', 'mtk.xlsx').replace(/\\/g, '/');
-    
-    setTimeout(function() {
-        alert('Имя файла скопировано в буфер: ' + fileName + '\n\n' +
-              'В Excel нажмите: Файл → Сохранить как\n' +
-              'Перейдите в папку mtk\n' +
-              'Вставьте имя файла (Ctrl+V)\n' +
-              'Нажмите Сохранить');
-    }, 2000);
-}
-
-function screenshotTable() {
-    var rows = document.querySelectorAll('#routesTable tbody tr');
-    var vis = [];
-    for (var i = 0; i < rows.length; i++) {
-        if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) vis.push(rows[i]);
-    }
-    if (vis.length === 0) { alert('Нет данных!'); return; }
-    var t = document.createElement('table');
-    t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:16px;position:absolute;left:-9999px;';
-    var h = '<thead><tr>';
-    ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) {
-        h += '<th style="border:1px solid #666;padding:10px 14px;background:#4a7a8c;color:white;font-size:17px;white-space:nowrap;">' + x + '</th>';
-    });
-    h += '</tr></thead><tbody>';
-    for (var r = 0; r < vis.length; r++) {
-        var cells = vis[r].querySelectorAll('td'); h += '<tr>';
-        for (var c = 0; c < 7; c++) {
-            h += '<td style="border:1px solid #ccc;padding:8px 12px;font-size:16px;' + (r%2===0?'background:#f5f5f5;':'') + (c<=4?'white-space:nowrap;':'') + '">' + (cells[c]?cells[c].textContent.trim():'') + '</td>';
-        }
-        h += '</tr>';
-    }
-    h += '</tbody>'; t.innerHTML = h; document.body.appendChild(t);
-    setTimeout(function() {
-        html2canvas(t, { backgroundColor: '#fff', scale: 2 }).then(function(canvas) {
-            document.body.removeChild(t);
-            canvas.toBlob(function(blob) {
-                navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() {
-                    alert('Скопировано в буфер!');
-                });
-            }, 'image/png', 1.0);
-        });
-    }, 100);
-}
-
-function exportJSON() {
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
-    a.download = 'routes.json'; a.click();
-}
-
-function importJSON() {
-    var inp = document.createElement('input'); inp.type = 'file';
-    inp.onchange = function(e) {
-        var r = new FileReader(); r.onload = function(ev) { data = JSON.parse(ev.target.result); saveData(); renderTable(); loadAddressDatalists(); };
-        r.readAsText(e.target.files[0]);
-    }; inp.click();
 }
 
 function openLocalFile(fileName) {
     var filePath = window.location.pathname.replace('index.html', 'mtk/' + fileName).replace(/\\/g, '/');
     window.location.href = 'ms-excel:ofe|u|file:///' + filePath;
-}
-
-function resetAll() {
-    if (confirm('Удалить ВСЕ маршруты и сбросить счётчики?')) {
-        data.routes = [];
-        data.settings.nextRouteId = 1;
-        data.settings.mtkCounter = 1;
-        data.settings.mtkDate = '';
-        saveData();
-        renderTable();
-        alert('Готово!');
-    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
