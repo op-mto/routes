@@ -8,7 +8,7 @@ var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
 
-var GITHUB_TOKEN = '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';
+var GITHUB_TOKEN = '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';
 var REPO_OWNER = 'op-mto';
 var REPO_NAME = 'routes';
 var DATA_PATH = 'data.json';
