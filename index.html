@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Менеджер маршрутов</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="html2canvas.min.js"></script>
+</head>
+<body>
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h2>Вход в систему</h2>
+            <div class="login-form">
+                <label>Логин:</label>
+                <input type="text" id="loginInput" placeholder="Введите логин">
+                <label>Пароль:</label>
+                <input type="password" id="passwordInput" placeholder="Введите пароль">
+                <button id="btnLogin" class="btn-login">Войти</button>
+                <p id="loginError" class="error"></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mainScreen" class="container" style="display: none;">
+        <div class="header">
+            <h1>Маршруты</h1>
+            <div class="user-info">
+                <span id="userName"></span>
+                <span id="userRole" class="role-badge"></span>
+                <button onclick="logout()" class="btn-logout">Выйти</button>
+            </div>
+        </div>
+        
+        <div class="form-section" id="formSection">
+            <h3>Добавление маршрута</h3>
+            <div class="form-row">
+                <label>Дата:</label>
+                <input type="date" id="date">
+                <label>Дата вып.:</label>
+                <input type="date" id="completionDate">
+                <label>Статус:</label>
+                <select id="status">
+                    <option value="Активно">Активно</option>
+                    <option value="Ожидание">Ожидание</option>
+                    <option value="Выполнено">Выполнено</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>Откуда:</label>
+                <input type="text" id="from" placeholder="Откуда" required>
+                <label>Куда:</label>
+                <input type="text" id="to" placeholder="Куда" required>
+            </div>
+            <div class="form-row">
+                <label>Задача:</label>
+                <textarea id="task" rows="3" placeholder="Описание задачи" required></textarea>
+            </div>
+            <div class="form-row">
+                <label>Примечание:</label>
+                <textarea id="note" rows="2" placeholder="Примечание"></textarea>
+                <label>Внутр. комм.:</label>
+                <textarea id="internalComment" rows="2" placeholder="Внутренний комментарий"></textarea>
+            </div>
+            <div class="buttons">
+                <button onclick="saveRoute()" class="btn-save">Сохранить</button>
+                <button onclick="openMTKBlank()" class="btn-mtk">Бланк МТК</button>
+                <button onclick="screenshotTable()" class="btn-screenshot">Скрин задач</button>
+                <button onclick="exportJSON()" class="btn-export">Скачать JSON</button>
+                <button onclick="importJSON()" class="btn-import">Загрузить JSON</button>
+            </div>
+        </div>
+        
+        <div class="admin-section" id="adminSection" style="display: none;">
+            <h3>Управление пользователями</h3>
+            <div class="form-row">
+                <label>Логин:</label>
+                <input type="text" id="newLogin">
+                <label>Пароль:</label>
+                <input type="text" id="newPassword">
+                <label>ФИО:</label>
+                <input type="text" id="newName">
+                <label>Роль:</label>
+                <select id="newRole">
+                    <option value="driver">Водитель</option>
+                    <option value="dispatcher">Диспетчер</option>
+                    <option value="admin">Админ</option>
+                </select>
+                <button onclick="addUser()" class="btn-save">Добавить</button>
+                 <button onclick="resetAll()" style="background:red;color:white;padding:5px 15px;margin-top:10px;">Сбросить всё</button>
+            </div>
+            <div id="usersTable"></div>
+        </div>
+        
+        <div class="table-section">
+            <div class="table-header">
+                <button onclick="toggleCompleted()" class="btn-toggle">Скрыть выполненные</button>
+                <input type="text" id="search" placeholder="Поиск..." oninput="renderTable()">
+                <span class="stats">
+                    Всего: <strong id="totalCount">0</strong> |
+                    Активно: <strong id="activeCount">0</strong> |
+                    Выполнено: <strong id="completedCount">0</strong>
+                </span>
+            </div>
+            <div class="table-wrapper">
+                <table id="routesTable">
+                    <thead>
+                        <tr>
+                            <th>№</th>
+                            <th>Дата</th>
+                            <th>Дата вып.</th>
+                            <th>Откуда</th>
+                            <th>Куда</th>
+                            <th>Задача</th>
+                            <th>Примечание</th>
+                            <th>Статус</th>
+                            <th>Внутр. комм.</th>
+                            <th>Создал</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="routesBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
