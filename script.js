@@ -51,8 +51,9 @@ function saveToGitHub() {
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     
     var xhr = new XMLHttpRequest();
-    xhr.open('PUT', 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_PATH);
-    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
+    xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/' + DATA_PATH);
+    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
     xhr.setRequestHeader('Content-Type', 'application/json');
     
     var body = JSON.stringify({
@@ -65,7 +66,6 @@ function saveToGitHub() {
         if (xhr.status === 200 || xhr.status === 201) {
             var response = JSON.parse(xhr.responseText);
             DATA_SHA = response.content.sha;
-            console.log('Saved to GitHub');
         }
     };
     xhr.send(body);
