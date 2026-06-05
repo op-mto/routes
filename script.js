@@ -27,9 +27,9 @@ function getCurrentDateTime() {
 
 function loadData() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + DATA_PATH, true);
-    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
+    xhr.open('GET', 'https://api.github.com/repos/op-mto/routes/contents/data.json?t=' + Date.now(), true);
     xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
     
     xhr.onload = function() {
         if (xhr.status === 200) {
@@ -40,13 +40,8 @@ function loadData() {
             renderTable();
         }
     };
-    xhr.onerror = function() {
-        var saved = localStorage.getItem('routesData');
-        if (saved) { data = JSON.parse(saved); renderTable(); }
-    };
     xhr.send();
 }
-
 function saveData() {
     localStorage.setItem('routesData', JSON.stringify(data));
     saveToGitHub();
