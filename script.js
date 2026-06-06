@@ -7,7 +7,8 @@ var data = {
 var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
-var DATA_SHA = '3fb9daccd1932389b61aba16bfbfff5b0847dea6';
+var DATA_SHA = '';
+var GITHUB_TOKEN = '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';
 
 function getCurrentDateTime() {
     var now = new Date();
@@ -33,10 +34,6 @@ function loadData() {
             renderTable();
         }
     };
-    xhr.onerror = function() {
-        var saved = localStorage.getItem('routesData');
-        if (saved) { data = JSON.parse(saved); renderTable(); }
-    };
     xhr.send();
 }
 
@@ -46,28 +43,17 @@ function saveData() {
 }
 
 function saveToGitHub() {
-    var GITHUB_TOKEN = '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';
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
-    
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/data.json');
     xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    
-    var body = JSON.stringify({
-        message: 'Update data',
-        content: content,
-        sha: DATA_SHA
-    });
-    
+    xhr.send(JSON.stringify({ message: 'Update', content: content, sha: DATA_SHA }));
     xhr.onload = function() {
         if (xhr.status === 200 || xhr.status === 201) {
-            var response = JSON.parse(xhr.responseText);
-            DATA_SHA = response.content.sha;
-            console.log('Saved to GitHub');
+            DATA_SHA = JSON.parse(xhr.responseText).content.sha;
         }
     };
-    xhr.send(body);
 }
 
 function updateAddressHistory() {
@@ -119,9 +105,7 @@ function login() {
         errorEl.textContent = '';
         loadAddressDatalists();
         renderTable();
-    } else {
-        errorEl.textContent = 'Неверный логин или пароль!';
-    }
+    } else { errorEl.textContent = 'Неверный логин или пароль!'; }
 }
 
 function logout() {
@@ -138,7 +122,7 @@ function saveRoute() {
     var task = document.getElementById('task').value.trim();
     if (!from || !to || !task) { alert('Заполните Откуда, Куда, Задача!'); return; }
     var now = getCurrentDateTime();
-    var route = {
+    data.routes.push({
         id: data.settings.nextRouteId,
         date: document.getElementById('date').value || new Date().toISOString().slice(0, 10),
         completionDate: document.getElementById('completionDate').value || '',
@@ -148,14 +132,10 @@ function saveRoute() {
         internalComment: document.getElementById('internalComment').value || '',
         createdBy: currentUser ? currentUser.name : '',
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
-    };
-    data.routes.push(route);
+    });
     data.settings.nextRouteId++;
-    saveData();
-    updateAddressHistory();
-    renderTable();
-    clearForm();
-    alert('Маршрут №' + route.id + ' сохранен!');
+    saveData(); updateAddressHistory(); renderTable(); clearForm();
+    alert('Маршрут сохранен!');
 }
 
 function updateRoute(id) {
@@ -177,7 +157,6 @@ function updateRoute(id) {
         }
     }
     saveData(); updateAddressHistory(); renderTable(); clearForm();
-    alert('Маршрут №' + id + ' обновлен!');
 }
 
 function clearForm() {
@@ -185,8 +164,6 @@ function clearForm() {
         var el = document.getElementById(id); if (el) el.value = '';
     });
     document.getElementById('status').value = 'Активно';
-    var btn = document.querySelector('.btn-save');
-    if (btn) { btn.textContent = 'Сохранить'; btn.setAttribute('onclick', 'saveRoute()'); }
 }
 
 function renderTable() {
@@ -204,13 +181,8 @@ function renderTable() {
         html += '<tr' + (r.status==='Выполнено'?' class="completed"':'') + '>';
         html += '<td>' + r.id + '</td><td>' + (r.date||'') + '</td><td>' + (r.completionDate||'') + '</td>';
         html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
-        html += '<td>';
-        if (r.task && r.task.indexOf('Globus ') === 0) {
-            var fn = r.task.replace('Globus ', '');
-            html += '<a href="#" onclick="openLocalFile(\'' + fn + '\'); return false;">' + r.task + '</a>';
-        } else { html += (r.task||''); }
-        html += '</td>';
-        html += '<td>' + (r.note||'') + '</td><td class="' + sc + '">' + (r.status||'') + '</td>';
+        html += '<td>' + (r.task||'') + '</td><td>' + (r.note||'') + '</td>';
+        html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
         html += '<td>' + (r.internalComment||'') + '</td>';
         html += '<td><b>' + (r.createdBy||'') + '</b><br><small>' + (r.createdAt||'') + '</small></td><td>';
         if (r.status !== 'Выполнено') html += '<button onclick="completeRoute('+r.id+')" style="background:green;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">OK</button> ';
@@ -249,8 +221,6 @@ function editRoute(id) {
             document.getElementById('note').value = r.note || '';
             document.getElementById('status').value = r.status || 'Активно';
             document.getElementById('internalComment').value = r.internalComment || '';
-            var btn = document.querySelector('.btn-save');
-            if (btn) { btn.textContent = 'Обновить'; btn.setAttribute('onclick', 'updateRoute(' + id + ')'); }
             break;
         }
     }
@@ -258,17 +228,10 @@ function editRoute(id) {
 
 function deleteRoute(id) {
     if (!currentUser || currentUser.role !== 'admin') { alert('Только администратор!'); return; }
-    if (confirm('Удалить маршрут №' + id + '?')) {
-        data.routes = data.routes.filter(function(r){return r.id !== id;});
-        saveData(); renderTable();
-    }
+    if (confirm('Удалить?')) { data.routes = data.routes.filter(function(r){return r.id !== id;}); saveData(); renderTable(); }
 }
 
-function toggleCompleted() {
-    showCompleted = !showCompleted;
-    document.querySelector('.btn-toggle').textContent = showCompleted ? 'Скрыть выполненные' : 'Показать все';
-    renderTable();
-}
+function toggleCompleted() { showCompleted = !showCompleted; renderTable(); }
 
 function addUser() {
     if (!currentUser || currentUser.role !== 'admin') return;
@@ -279,14 +242,9 @@ function addUser() {
     if (!login || !pass || !name) { alert('Заполните все поля!'); return; }
     data.users.push({ id: data.settings.nextUserId, login: login, password: pass, name: name, role: role });
     data.settings.nextUserId++; saveData(); renderUsers();
-    document.getElementById('newLogin').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('newName').value = '';
 }
 
-function deleteUser(id) {
-    if (confirm('Удалить?')) { data.users = data.users.filter(function(u){return u.id !== id;}); saveData(); renderUsers(); }
-}
+function deleteUser(id) { if (confirm('Удалить?')) { data.users = data.users.filter(function(u){return u.id !== id;}); saveData(); renderUsers(); } }
 
 function renderUsers() {
     var c = document.getElementById('usersTable'); if (!c) return;
@@ -302,30 +260,15 @@ function renderUsers() {
 function openMTKBlank() {
     var today = new Date().toISOString().slice(0, 10);
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
-    var day = today.slice(8, 10);
-    var month = today.slice(5, 7);
-    var year = today.slice(2, 4);
+    var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
     window.currentMTKFile = { name: fileName, path: 'mtk/' + fileName };
     data.settings.mtkCounter++; saveData();
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
-    var tmp = document.createElement('textarea');
-    tmp.value = fileName;
-    document.body.appendChild(tmp);
-    tmp.select();
-    document.execCommand('copy');
-    document.body.removeChild(tmp);
-    window.location.href = 'ms-excel:ofe|u|file:///' + window.location.pathname.replace('index.html', 'mtk.xlsx').replace(/\\/g, '/');
-}
-
-function openLocalFile(fileName) {
-    var filePath = window.location.pathname.replace('index.html', 'mtk/' + fileName).replace(/\\/g, '/');
-    window.location.href = 'ms-excel:ofe|u|file:///' + filePath;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     document.getElementById('btnLogin').addEventListener('click', login);
-    document.getElementById('passwordInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') login(); });
 });
