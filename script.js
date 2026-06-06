@@ -7,12 +7,7 @@ var data = {
 var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
-
-var GITHUB_TOKEN = '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';
-var REPO_OWNER = 'op-mto';
-var REPO_NAME = 'routes';
-var DATA_PATH = 'data.json';
-var DATA_SHA = '';
+var DATA_SHA = '3fb9daccd1932389b61aba16bfbfff5b0847dea6';
 
 function getCurrentDateTime() {
     var now = new Date();
@@ -28,31 +23,34 @@ function getCurrentDateTime() {
 function loadData() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://api.github.com/repos/op-mto/routes/contents/data.json?t=' + Date.now(), true);
-    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
-    xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
-    
     xhr.onload = function() {
         if (xhr.status === 200) {
             var response = JSON.parse(xhr.responseText);
             DATA_SHA = response.sha;
             var content = decodeURIComponent(escape(atob(response.content)));
             data = JSON.parse(content);
+            if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
             renderTable();
         }
     };
+    xhr.onerror = function() {
+        var saved = localStorage.getItem('routesData');
+        if (saved) { data = JSON.parse(saved); renderTable(); }
+    };
     xhr.send();
 }
+
 function saveData() {
     localStorage.setItem('routesData', JSON.stringify(data));
     saveToGitHub();
 }
 
 function saveToGitHub() {
+    var GITHUB_TOKEN = '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';
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     
     var xhr = new XMLHttpRequest();
-    xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/' + DATA_PATH);
-    xhr.setRequestHeader('Accept', 'application/vnd.github.v3+json');
+    xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/data.json');
     xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
     xhr.setRequestHeader('Content-Type', 'application/json');
     
@@ -66,6 +64,7 @@ function saveToGitHub() {
         if (xhr.status === 200 || xhr.status === 201) {
             var response = JSON.parse(xhr.responseText);
             DATA_SHA = response.content.sha;
+            console.log('Saved to GitHub');
         }
     };
     xhr.send(body);
