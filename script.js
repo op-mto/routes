@@ -8,7 +8,7 @@ var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
 var DATA_SHA = '';
-var GITHUB_TOKEN = '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';
+var GITHUB_TOKEN = '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';
 
 function getCurrentDateTime() {
     var now = new Date();
