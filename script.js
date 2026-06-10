@@ -8,7 +8,7 @@ var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
 var DATA_SHA = '';
-var GITHUB_TOKEN = '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';
+var GITHUB_TOKEN = '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';
 
 function getCurrentDateTime() {
     var now = new Date();
@@ -23,16 +23,17 @@ function getCurrentDateTime() {
 
 function loadData() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://api.github.com/repos/op-mto/routes/contents/data.json?t=' + Date.now(), true);
+    xhr.open('GET', 'https://raw.githubusercontent.com/op-mto/routes/main/data.json?t=' + Date.now(), true);
     xhr.onload = function() {
         if (xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            DATA_SHA = response.sha;
-            var content = decodeURIComponent(escape(atob(response.content)));
-            data = JSON.parse(content);
+            data = JSON.parse(xhr.responseText);
             if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
             renderTable();
         }
+    };
+    xhr.onerror = function() {
+        var saved = localStorage.getItem('routesData');
+        if (saved) { data = JSON.parse(saved); renderTable(); }
     };
     xhr.send();
 }
@@ -46,7 +47,7 @@ function saveToGitHub() {
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/data.json');
-    xhr.setRequestHeader('Authorization', 'Bearer ' + GITHUB_TOKEN);
+    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify({ message: 'Update', content: content, sha: DATA_SHA }));
     xhr.onload = function() {
