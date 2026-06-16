@@ -326,6 +326,16 @@ function startAutoRefresh() {
 }
 
 function screenshotTable() {
+    var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+    
+    if (isFirefox) {
+        copyAsFormattedText();
+    } else {
+        copyAsImage();
+    }
+}
+
+function copyAsImage() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
     var vis = [];
     for (var i = 0; i < rows.length; i++) {
@@ -358,12 +368,76 @@ function screenshotTable() {
         document.body.removeChild(t);
         canvas.toBlob(function(blob) {
             navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() {
-                alert('Скриншот скопирован в буфер!\nВставьте в Telegram (Ctrl+V)');
-            }).catch(function() {
-                alert('Не удалось скопировать. Разрешите буфер обмена в браузере.');
+                alert('Изображение скопировано в буфер!');
             });
         });
     });
+}
+
+function copyAsFormattedText() {
+    var rows = document.querySelectorAll('#routesTable tbody tr');
+    
+    // Сначала собираем все данные
+    var data = [];
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].style.display === 'none') continue;
+        if (rows[i].classList.contains('completed')) continue;
+        
+        var cells = rows[i].querySelectorAll('td');
+        data.push([
+            cells[0] ? cells[0].textContent.trim() : '',
+            cells[1] ? cells[1].textContent.trim() : '',
+            cells[2] ? cells[2].textContent.trim() : '',
+            cells[3] ? cells[3].textContent.trim() : '',
+            cells[4] ? cells[4].textContent.trim() : '',
+            cells[5] ? cells[5].textContent.trim() : '',
+            cells[6] ? cells[6].textContent.trim() : ''
+        ]);
+    }
+    
+    // Находим максимальную ширину каждого столбца
+    var widths = [4, 10, 10, 8, 6, 20, 12];
+    for (var i = 0; i < data.length; i++) {
+        widths[0] = Math.max(widths[0], data[i][0].length + 2);
+        widths[1] = Math.max(widths[1], data[i][1].length + 2);
+        widths[2] = Math.max(widths[2], data[i][2].length + 2);
+        widths[3] = Math.max(widths[3], data[i][3].length + 2);
+        widths[4] = Math.max(widths[4], data[i][4].length + 2);
+        widths[5] = Math.max(widths[5], data[i][5].length + 2);
+        widths[6] = Math.max(widths[6], data[i][6].length + 2);
+    }
+    
+    function line(left, mid, right) {
+        var s = left;
+        for (var i = 0; i < 7; i++) s += '─'.repeat(widths[i]) + mid;
+        return s.substring(0, s.length - 1) + right + '\n';
+    }
+    
+    function row(values) {
+        var s = '│';
+        for (var i = 0; i < 7; i++) s += ' ' + (values[i] || '').padEnd(widths[i] - 1) + '│';
+        return s + '\n';
+    }
+    
+    var text = '';
+    text += line('┌', '┬', '┐');
+    text += row(['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание']);
+    text += line('├', '┼', '┤');
+    
+    for (var i = 0; i < data.length; i++) {
+        text += row(data[i]);
+    }
+    
+    text += line('└', '┴', '┘');
+    
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    
+    alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
 }
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
