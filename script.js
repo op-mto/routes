@@ -280,22 +280,19 @@ function importJSON() {
 
 function startAutoRefresh() {
     setInterval(function() {
-        var wasEditing = document.getElementById('from').value !== '';
-        
         var xhr = new XMLHttpRequest();
         xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
         xhr.onload = function() {
-            if (xhr.status === 200 && xhr.responseText !== 'null') {
+            if (xhr.status === 200 && xhr.responseText !== 'null' && xhr.responseText !== '') {
                 try {
                     var newData = JSON.parse(xhr.responseText);
                     if (newData && newData.routes) {
-                        // Обновляем только если не редактируем
-                        if (!wasEditing) {
-                            var oldLen = data.routes.length;
-                            data = newData;
-                            if (data.routes.length !== oldLen) {
-                                renderTable();
-                            }
+                        var oldLen = data.routes.length;
+                        data.routes = newData.routes;
+                        data.settings = newData.settings || data.settings;
+                        data.users = newData.users || data.users;
+                        if (data.routes.length !== oldLen || document.getElementById('from').value === '') {
+                            renderTable();
                         }
                     }
                 } catch(e) {}
