@@ -7,7 +7,7 @@ var data = {
 };
 
 var currentUser = null;
-var showCompleted = true;
+var showCompleted = false;
 window.currentMTKFile = null;
 
 function getCurrentDateTime() {
@@ -101,6 +101,8 @@ function login() {
         errorEl.textContent = '';
         loadAddressDatalists();
         renderTable();
+        var btn = document.querySelector('.btn-toggle');
+        if (btn) btn.textContent = 'Показать выполненные';
         startAutoRefresh();
     } else { errorEl.textContent = 'Неверный логин или пароль!'; }
 }
@@ -242,7 +244,12 @@ function deleteRoute(id) {
     if (confirm('Удалить?')) { data.routes = data.routes.filter(function(r){return r.id !== id;}); saveData(); renderTable(); }
 }
 
-function toggleCompleted() { showCompleted = !showCompleted; renderTable(); }
+function toggleCompleted() {
+    showCompleted = !showCompleted;
+    var btn = document.querySelector('.btn-toggle');
+    if (btn) btn.textContent = showCompleted ? 'Скрыть выполненные' : 'Показать выполненные';
+    renderTable();
+}
 
 function addUser() {
     if (!currentUser || currentUser.role !== 'admin') return;
