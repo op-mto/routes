@@ -153,7 +153,16 @@ function updateRoute(id) {
             break;
         }
     }
-    saveData(); updateAddressHistory(); renderTable(); clearForm();
+    saveData(); renderTable(); clearForm();
+    
+    // Возвращаем кнопку обратно
+    var btn = document.querySelector('.btn-save');
+    if (btn) {
+        btn.textContent = 'Сохранить';
+        btn.setAttribute('onclick', 'saveRoute()');
+    }
+    
+    alert('Маршрут №' + id + ' обновлен!');
 }
 
 function clearForm() {
@@ -216,6 +225,13 @@ function editRoute(id) {
             document.getElementById('note').value = r.note || '';
             document.getElementById('status').value = r.status || 'Активно';
             document.getElementById('internalComment').value = r.internalComment || '';
+            
+            // Меняем кнопку
+            var btn = document.querySelector('.btn-save');
+            if (btn) {
+                btn.textContent = 'Обновить';
+                btn.setAttribute('onclick', 'updateRoute(' + id + ')');
+            }
             break;
         }
     }
