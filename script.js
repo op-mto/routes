@@ -1,3 +1,5 @@
+var FIREBASE_URL = 'https://routes-ef3a9-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 var data = {
     users: [],
     routes: [],
@@ -7,8 +9,6 @@ var data = {
 var currentUser = null;
 var showCompleted = true;
 window.currentMTKFile = null;
-var DATA_SHA = '';
-var GITHUB_TOKEN = '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';
 
 function getCurrentDateTime() {
     var now = new Date();
@@ -23,38 +23,24 @@ function getCurrentDateTime() {
 
 function loadData() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://raw.githubusercontent.com/op-mto/routes/main/data.json?t=' + Date.now(), true);
+    xhr.open('GET', FIREBASE_URL + '/data.json', true);
     xhr.onload = function() {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 && xhr.responseText !== 'null') {
             data = JSON.parse(xhr.responseText);
+            if (!data.settings) data.settings = { nextRouteId: 1, nextUserId: 4, addressHistory: { from: [], to: [] }, mtkCounter: 1, mtkDate: "" };
             if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
-            renderTable();
         }
-    };
-    xhr.onerror = function() {
-        var saved = localStorage.getItem('routesData');
-        if (saved) { data = JSON.parse(saved); renderTable(); }
+        renderTable();
     };
     xhr.send();
 }
 
 function saveData() {
     localStorage.setItem('routesData', JSON.stringify(data));
-    saveToGitHub();
-}
-
-function saveToGitHub() {
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     var xhr = new XMLHttpRequest();
-    xhr.open('PUT', 'https://api.github.com/repos/op-mto/routes/contents/data.json');
-    xhr.setRequestHeader('Authorization', 'token ' + GITHUB_TOKEN);
+    xhr.open('PUT', FIREBASE_URL + '/data.json', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify({ message: 'Update', content: content, sha: DATA_SHA }));
-    xhr.onload = function() {
-        if (xhr.status === 200 || xhr.status === 201) {
-            DATA_SHA = JSON.parse(xhr.responseText).content.sha;
-        }
-    };
+    xhr.send(JSON.stringify(data));
 }
 
 function updateAddressHistory() {
@@ -267,6 +253,53 @@ function openMTKBlank() {
     data.settings.mtkCounter++; saveData();
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
+}
+
+function exportJSON() {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+    a.download = 'data.json'; a.click();
+}
+
+function importJSON() {
+    var inp = document.createElement('input'); inp.type = 'file';
+    inp.onchange = function(e) {
+        var r = new FileReader();
+        r.onload = function(ev) { data = JSON.parse(ev.target.result); saveData(); renderTable(); };
+        r.readAsText(e.target.files[0]);
+    }; inp.click();
+}
+
+function screenshotTable() {
+    var rows = document.querySelectorAll('#routesTable tbody tr');
+    var vis = [];
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) vis.push(rows[i]);
+    }
+    if (vis.length === 0) { alert('Нет данных!'); return; }
+    var t = document.createElement('table');
+    t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:16px;position:absolute;left:-9999px;';
+    var h = '<thead><tr>';
+    ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) {
+        h += '<th style="border:1px solid #666;padding:10px 14px;background:#4a7a8c;color:white;font-size:17px;white-space:nowrap;">' + x + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    for (var r = 0; r < vis.length; r++) {
+        var cells = vis[r].querySelectorAll('td'); h += '<tr>';
+        for (var c = 0; c < 7; c++) {
+            h += '<td style="border:1px solid #ccc;padding:8px 12px;font-size:16px;' + (r%2===0?'background:#f5f5f5;':'') + (c<=4?'white-space:nowrap;':'') + '">' + (cells[c]?cells[c].textContent.trim():'') + '</td>';
+        }
+        h += '</tr>';
+    }
+    h += '</tbody>'; t.innerHTML = h; document.body.appendChild(t);
+    setTimeout(function() {
+        html2canvas(t, { backgroundColor: '#fff', scale: 2 }).then(function(canvas) {
+            document.body.removeChild(t);
+            var link = document.createElement('a');
+            link.download = 'Маршруты_' + new Date().toISOString().slice(0,10) + '.png';
+            link.href = canvas.toDataURL('image/png'); link.click();
+        });
+    }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
