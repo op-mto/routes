@@ -377,7 +377,6 @@ function copyAsImage() {
 function copyAsFormattedText() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
     
-    // Сначала собираем все данные
     var data = [];
     for (var i = 0; i < rows.length; i++) {
         if (rows[i].style.display === 'none') continue;
@@ -395,16 +394,22 @@ function copyAsFormattedText() {
         ]);
     }
     
-    // Находим максимальную ширину каждого столбца
-    var widths = [4, 10, 10, 8, 6, 20, 12];
-    for (var i = 0; i < data.length; i++) {
-        widths[0] = Math.max(widths[0], data[i][0].length + 2);
-        widths[1] = Math.max(widths[1], data[i][1].length + 2);
-        widths[2] = Math.max(widths[2], data[i][2].length + 2);
-        widths[3] = Math.max(widths[3], data[i][3].length + 2);
-        widths[4] = Math.max(widths[4], data[i][4].length + 2);
-        widths[5] = Math.max(widths[5], data[i][5].length + 2);
-        widths[6] = Math.max(widths[6], data[i][6].length + 2);
+    if (data.length === 0) { alert('Нет данных!'); return; }
+    
+    // Фиксированная ширина столбцов
+    var widths = [5, 12, 12, 12, 8, 35, 15];
+    var headers = ['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание'];
+    
+    function wrapText(text, width) {
+        if (text.length <= width) return [text];
+        var lines = [];
+        var remaining = text;
+        while (remaining.length > width) {
+            lines.push(remaining.substring(0, width));
+            remaining = remaining.substring(width);
+        }
+        if (remaining.length > 0) lines.push(remaining);
+        return lines;
     }
     
     function line(left, mid, right) {
@@ -414,18 +419,34 @@ function copyAsFormattedText() {
     }
     
     function row(values) {
-        var s = '│';
-        for (var i = 0; i < 7; i++) s += ' ' + (values[i] || '').padEnd(widths[i] - 1) + '│';
-        return s + '\n';
+        // Разбиваем каждую ячейку на строки
+        var lines = [];
+        var maxLines = 0;
+        for (var i = 0; i < 7; i++) {
+            lines[i] = wrapText(values[i] || '', widths[i] - 1);
+            maxLines = Math.max(maxLines, lines[i].length);
+        }
+        
+        var result = '';
+        for (var l = 0; l < maxLines; l++) {
+            result += '│';
+            for (var i = 0; i < 7; i++) {
+                var text = l < lines[i].length ? lines[i][l] : '';
+                result += ' ' + text.padEnd(widths[i] - 1) + '│';
+            }
+            result += '\n';
+        }
+        return result;
     }
     
     var text = '';
     text += line('┌', '┬', '┐');
-    text += row(['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание']);
+    text += row(headers);
     text += line('├', '┼', '┤');
     
     for (var i = 0; i < data.length; i++) {
         text += row(data[i]);
+        if (i < data.length - 1) text += line('├', '┼', '┤');
     }
     
     text += line('└', '┴', '┘');
