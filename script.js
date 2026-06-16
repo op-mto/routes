@@ -356,13 +356,15 @@ function screenshotTable() {
     
     html2canvas(t, { backgroundColor: '#fff', scale: 2 }).then(function(canvas) {
         document.body.removeChild(t);
-        var a = document.createElement('a');
-        a.download = 'Маршруты_' + new Date().toISOString().slice(0,10) + '.png';
-        a.href = canvas.toDataURL('image/png');
-        a.click();
+        canvas.toBlob(function(blob) {
+            navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() {
+                alert('Скриншот скопирован в буфер!\nВставьте в Telegram (Ctrl+V)');
+            }).catch(function() {
+                alert('Не удалось скопировать. Разрешите буфер обмена в браузере.');
+            });
+        });
     });
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     document.getElementById('btnLogin').addEventListener('click', login);
