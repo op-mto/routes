@@ -277,6 +277,28 @@ function importJSON() {
     }; inp.click();
 }
 
+function startAutoRefresh() {
+    setInterval(function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200 && xhr.responseText !== 'null') {
+                try {
+                    var newData = JSON.parse(xhr.responseText);
+                    if (newData && newData.routes && newData.settings) {
+                        var oldLength = data.routes.length;
+                        data = newData;
+                        if (data.routes.length !== oldLength) {
+                            renderTable();
+                        }
+                    }
+                } catch(e) {}
+            }
+        };
+        xhr.send();
+    }, 5000); // Проверка каждые 5 секунд
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     document.getElementById('btnLogin').addEventListener('click', login);
