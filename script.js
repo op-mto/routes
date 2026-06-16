@@ -101,6 +101,7 @@ function login() {
         errorEl.textContent = '';
         loadAddressDatalists();
         renderTable();
+        startAutoRefresh();
     } else { errorEl.textContent = 'Неверный логин или пароль!'; }
 }
 
