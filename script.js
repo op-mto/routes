@@ -280,24 +280,29 @@ function importJSON() {
 
 function startAutoRefresh() {
     setInterval(function() {
+        var wasEditing = document.getElementById('from').value !== '';
+        
         var xhr = new XMLHttpRequest();
         xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
         xhr.onload = function() {
             if (xhr.status === 200 && xhr.responseText !== 'null') {
                 try {
                     var newData = JSON.parse(xhr.responseText);
-                    if (newData && newData.routes && newData.settings) {
-                        var oldLength = data.routes.length;
-                        data = newData;
-                        if (data.routes.length !== oldLength) {
-                            renderTable();
+                    if (newData && newData.routes) {
+                        // Обновляем только если не редактируем
+                        if (!wasEditing) {
+                            var oldLen = data.routes.length;
+                            data = newData;
+                            if (data.routes.length !== oldLen) {
+                                renderTable();
+                            }
                         }
                     }
                 } catch(e) {}
             }
         };
         xhr.send();
-    }, 5000); // Проверка каждые 5 секунд
+    }, 5000);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
