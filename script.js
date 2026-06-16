@@ -444,9 +444,8 @@ function copyAsFormattedText() {
     text += row(headers);
     text += line('├', '┼', '┤');
     
-    for (var i = 0; i < data.length; i++) {
+   for (var i = 0; i < data.length; i++) {
         text += row(data[i]);
-        if (i < data.length - 1) text += line('├', '┼', '┤');
     }
     
     text += line('└', '┴', '┘');
