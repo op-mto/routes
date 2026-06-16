@@ -26,10 +26,19 @@ function loadData() {
     xhr.open('GET', FIREBASE_URL + '/data.json', true);
     xhr.onload = function() {
         if (xhr.status === 200 && xhr.responseText !== 'null') {
-            data = JSON.parse(xhr.responseText);
-            if (!data.settings) data.settings = { nextRouteId: 1, nextUserId: 4, addressHistory: { from: [], to: [] }, mtkCounter: 1, mtkDate: "" };
-            if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
+            try {
+                var loaded = JSON.parse(xhr.responseText);
+                if (loaded && loaded.users && loaded.routes && loaded.settings) {
+                    data = loaded;
+                }
+            } catch(e) {
+                console.log('Error loading data');
+            }
         }
+        if (!data.users) data.users = [];
+        if (!data.routes) data.routes = [];
+        if (!data.settings) data.settings = { nextRouteId: 1, nextUserId: 4, addressHistory: { from: [], to: [] }, mtkCounter: 1, mtkDate: "" };
+        if (!data.settings.addressHistory) data.settings.addressHistory = { from: [], to: [] };
         renderTable();
     };
     xhr.send();
