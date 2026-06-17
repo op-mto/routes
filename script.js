@@ -50,12 +50,6 @@ function saveData() {
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', FIREBASE_URL + '/data.json', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.onload = function() {
-        console.log('Save status:', xhr.status);
-    };
-    xhr.onerror = function() {
-        console.log('Save error');
-    };
     xhr.send(JSON.stringify(data));
 }
 
@@ -140,10 +134,7 @@ function saveRoute() {
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
     });
     data.settings.nextRouteId++;
-   saveData(); 
-    updateAddressHistory(); 
-    clearForm();
-    renderTable();
+    saveData(); updateAddressHistory(); clearForm(); renderTable();
     alert('Маршрут сохранен!');
 }
 
@@ -166,14 +157,8 @@ function updateRoute(id) {
         }
     }
     saveData(); renderTable(); clearForm();
-    
-    // Возвращаем кнопку обратно
     var btn = document.querySelector('.btn-save');
-    if (btn) {
-        btn.textContent = 'Сохранить';
-        btn.setAttribute('onclick', 'saveRoute()');
-    }
-    
+    if (btn) { btn.textContent = 'Сохранить'; btn.setAttribute('onclick', 'saveRoute()'); }
     alert('Маршрут №' + id + ' обновлен!');
 }
 
@@ -191,12 +176,10 @@ function renderTable() {
     
     var isDriver = currentUser && currentUser.role === 'driver';
     
-    // Обновляем заголовки таблицы
     var thead = document.querySelector('#routesTable thead tr');
     if (thead) {
         thead.innerHTML = '<th>№</th><th>Дата</th><th>Дата вып.</th><th>Откуда</th><th>Куда</th><th>Задача</th><th>Примечание</th><th>Статус</th>' +
-            (isDriver ? '' : '<th>Внутр. комм.</th><th>Создал</th>') +
-            '<th></th>';
+            (isDriver ? '' : '<th>Внутр. комм.</th><th>Создал</th>') + '<th></th>';
     }
     
     var searchTerm = (document.getElementById('search')||{}).value || '';
@@ -214,8 +197,12 @@ function renderTable() {
         html += '<td>' + r.id + '</td><td>' + (r.date||'') + '</td><td>' + (r.completionDate||'') + '</td>';
         html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
         html += '<td>';
-if (r.task && r.task.indexOf('Globus ') === 0) {
-html += '<td>' + (r.task||'') + '</td><td>' + (r.note||'') + '</td>';
+        if (r.task && r.task.indexOf('Globus ') === 0) {
+            html += '<a href="#" onclick="openMTKFromLink(\'' + r.id + '\'); return false;" style="color:#1976D2;text-decoration:underline;cursor:pointer;">' + r.task + '</a>';
+        } else {
+            html += (r.task||'');
+        }
+        html += '</td><td>' + (r.note||'') + '</td>';
         html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
         
         if (!isDriver) {
@@ -262,13 +249,8 @@ function editRoute(id) {
             document.getElementById('note').value = r.note || '';
             document.getElementById('status').value = r.status || 'Активно';
             document.getElementById('internalComment').value = r.internalComment || '';
-            
-            // Меняем кнопку
             var btn = document.querySelector('.btn-save');
-            if (btn) {
-                btn.textContent = 'Обновить';
-                btn.setAttribute('onclick', 'updateRoute(' + id + ')');
-            }
+            if (btn) { btn.textContent = 'Обновить'; btn.setAttribute('onclick', 'updateRoute(' + id + ')'); }
             break;
         }
     }
@@ -311,18 +293,29 @@ function renderUsers() {
 }
 
 function openMTKBlank() {
-    if (currentUser && currentUser.role === 'driver') {
-        alert('Водитель не может создавать бланки!');
-        return;
-    }
+    if (currentUser && currentUser.role === 'driver') { alert('Водитель не может создавать бланки!'); return; }
     var today = new Date().toISOString().slice(0, 10);
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
     var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
+    if (!data.mtkBlanks) data.mtkBlanks = [];
+    data.mtkBlanks.push({ id: data.settings.mtkCounter, name: fileName, items: [] });
     data.settings.mtkCounter++; saveData();
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
-    window.open('mtk.html', 'mtk', 'width=900,height=700');
+    window.open('mtk.html?id=' + (data.settings.mtkCounter - 1) + '&role=dispatcher', 'mtk', 'width=900,height=700');
+}
+
+function openMTKFromLink(routeId) {
+    var route = null;
+    for (var i = 0; i < data.routes.length; i++) { if (data.routes[i].id === routeId) { route = data.routes[i]; break; } }
+    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) { alert('Бланк не найден!'); return; }
+    var fileName = route.task.replace('Globus ', '');
+    var blankId = null;
+    if (data.mtkBlanks) { for (var i = 0; i < data.mtkBlanks.length; i++) { if (data.mtkBlanks[i].name === fileName) { blankId = data.mtkBlanks[i].id; break; } } }
+    if (blankId === null) { alert('Бланк не найден в базе!'); return; }
+    var role = currentUser ? currentUser.role : '';
+    window.open('mtk.html?id=' + blankId + '&role=' + role, 'mtk_' + blankId, 'width=900,height=700');
 }
 
 function exportJSON() {
@@ -333,11 +326,7 @@ function exportJSON() {
 
 function importJSON() {
     var inp = document.createElement('input'); inp.type = 'file';
-    inp.onchange = function(e) {
-        var r = new FileReader();
-        r.onload = function(ev) { data = JSON.parse(ev.target.result); saveData(); renderTable(); };
-        r.readAsText(e.target.files[0]);
-    }; inp.click();
+    inp.onchange = function(e) { var r = new FileReader(); r.onload = function(ev) { data = JSON.parse(ev.target.result); saveData(); renderTable(); }; r.readAsText(e.target.files[0]); }; inp.click();
 }
 
 function startAutoRefresh() {
@@ -345,7 +334,7 @@ function startAutoRefresh() {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
         xhr.onload = function() {
-            if (xhr.status === 200 && xhr.responseText !== 'null' && xhr.responseText !== '') {
+            if (xhr.status === 200 && xhr.responseText !== 'null') {
                 try {
                     var newData = JSON.parse(xhr.responseText);
                     if (newData && newData.routes) {
@@ -353,9 +342,8 @@ function startAutoRefresh() {
                         data.routes = newData.routes;
                         data.settings = newData.settings || data.settings;
                         data.users = newData.users || data.users;
-                        if (data.routes.length !== oldLen || document.getElementById('from').value === '') {
-                            renderTable();
-                        }
+                        data.mtkBlanks = newData.mtkBlanks || data.mtkBlanks;
+                        if (data.routes.length !== oldLen || document.getElementById('from').value === '') renderTable();
                     }
                 } catch(e) {}
             }
@@ -365,199 +353,46 @@ function startAutoRefresh() {
 }
 
 function screenshotTable() {
-    var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-    
-    if (isFirefox) {
-        copyAsFormattedText();
-    } else {
-        copyAsImage();
-    }
+    if (navigator.userAgent.toLowerCase().indexOf('firefox') > -1) { copyAsFormattedText(); } else { copyAsImage(); }
 }
 
 function copyAsImage() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
     var vis = [];
-    for (var i = 0; i < rows.length; i++) {
-        if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) {
-            vis.push(rows[i]);
-        }
-    }
+    for (var i = 0; i < rows.length; i++) { if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) vis.push(rows[i]); }
     if (vis.length === 0) { alert('Нет данных!'); return; }
-    
     var t = document.createElement('table');
     t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:16px;position:absolute;left:-9999px;';
     var h = '<thead><tr>';
-    ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) {
-        h += '<th style="border:1px solid #999;padding:10px 14px;background:#4a7a8c;color:white;font-size:17px;">' + x + '</th>';
-    });
+    ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) { h += '<th style="border:1px solid #999;padding:10px 14px;background:#4a7a8c;color:white;font-size:17px;">' + x + '</th>'; });
     h += '</tr></thead><tbody>';
     for (var r = 0; r < vis.length; r++) {
-        var cells = vis[r].querySelectorAll('td');
-        h += '<tr>';
-        for (var c = 0; c < 7; c++) {
-            h += '<td style="border:1px solid #ddd;padding:8px 12px;font-size:16px;' + (r%2===0?'background:#f9f9f9;':'') + '">' + (cells[c]?cells[c].textContent.trim():'') + '</td>';
-        }
+        var cells = vis[r].querySelectorAll('td'); h += '<tr>';
+        for (var c = 0; c < 7; c++) { h += '<td style="border:1px solid #ddd;padding:8px 12px;font-size:16px;' + (r%2===0?'background:#f9f9f9;':'') + '">' + (cells[c]?cells[c].textContent.trim():'') + '</td>'; }
         h += '</tr>';
     }
-    h += '</tbody>';
-    t.innerHTML = h;
-    document.body.appendChild(t);
-    
+    h += '</tbody>'; t.innerHTML = h; document.body.appendChild(t);
     html2canvas(t, { backgroundColor: '#fff', scale: 2 }).then(function(canvas) {
         document.body.removeChild(t);
-        canvas.toBlob(function(blob) {
-            navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() {
-                alert('Изображение скопировано в буфер!');
-            });
-        });
+        canvas.toBlob(function(blob) { navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() { alert('Скопировано в буфер!'); }); });
     });
 }
 
 function copyAsFormattedText() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
-    
-    var data = [];
-    for (var i = 0; i < rows.length; i++) {
-        if (rows[i].style.display === 'none') continue;
-        if (rows[i].classList.contains('completed')) continue;
-        
-        var cells = rows[i].querySelectorAll('td');
-        data.push([
-            cells[0] ? cells[0].textContent.trim() : '',
-            cells[1] ? cells[1].textContent.trim() : '',
-            cells[2] ? cells[2].textContent.trim() : '',
-            cells[3] ? cells[3].textContent.trim() : '',
-            cells[4] ? cells[4].textContent.trim() : '',
-            cells[5] ? cells[5].textContent.trim() : '',
-            cells[6] ? cells[6].textContent.trim() : ''
-        ]);
-    }
-    
-    if (data.length === 0) { alert('Нет данных!'); return; }
-    
-    // Фиксированная ширина столбцов
+    var dataArr = [];
+    for (var i = 0; i < rows.length; i++) { if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) { var cells = rows[i].querySelectorAll('td'); dataArr.push([cells[0]?cells[0].textContent.trim():'', cells[1]?cells[1].textContent.trim():'', cells[2]?cells[2].textContent.trim():'', cells[3]?cells[3].textContent.trim():'', cells[4]?cells[4].textContent.trim():'', cells[5]?cells[5].textContent.trim():'', cells[6]?cells[6].textContent.trim():'']); } }
+    if (dataArr.length === 0) { alert('Нет данных!'); return; }
     var widths = [5, 12, 12, 12, 8, 35, 15];
     var headers = ['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание'];
-    
-    function wrapText(text, width) {
-        if (text.length <= width) return [text];
-        var lines = [];
-        var remaining = text;
-        while (remaining.length > width) {
-            lines.push(remaining.substring(0, width));
-            remaining = remaining.substring(width);
-        }
-        if (remaining.length > 0) lines.push(remaining);
-        return lines;
-    }
-    
-    function line(left, mid, right) {
-        var s = left;
-        for (var i = 0; i < 7; i++) s += '─'.repeat(widths[i]) + mid;
-        return s.substring(0, s.length - 1) + right + '\n';
-    }
-    
-    function row(values) {
-        // Разбиваем каждую ячейку на строки
-        var lines = [];
-        var maxLines = 0;
-        for (var i = 0; i < 7; i++) {
-            lines[i] = wrapText(values[i] || '', widths[i] - 1);
-            maxLines = Math.max(maxLines, lines[i].length);
-        }
-        
-        var result = '';
-        for (var l = 0; l < maxLines; l++) {
-            result += '│';
-            for (var i = 0; i < 7; i++) {
-                var text = l < lines[i].length ? lines[i][l] : '';
-                result += ' ' + text.padEnd(widths[i] - 1) + '│';
-            }
-            result += '\n';
-        }
-        return result;
-    }
-    
-    var text = '';
-    text += line('┌', '┬', '┐');
-    text += row(headers);
-    text += line('├', '┼', '┤');
-    
-   for (var i = 0; i < data.length; i++) {
-        text += row(data[i]);
-    }
-    
-    text += line('└', '┴', '┘');
-    
-    var tmp = document.createElement('textarea');
-    tmp.value = text;
-    document.body.appendChild(tmp);
-    tmp.select();
-    document.execCommand('copy');
-    document.body.removeChild(tmp);
-    
+    function wrapText(text, width) { if (text.length <= width) return [text]; var lines = [], r = text; while (r.length > width) { lines.push(r.substring(0, width)); r = r.substring(width); } if (r.length > 0) lines.push(r); return lines; }
+    function line(l, m, r) { var s = l; for (var i = 0; i < 7; i++) s += '─'.repeat(widths[i]) + m; return s.substring(0, s.length-1) + r + '\n'; }
+    function row(vals) { var lines = [], maxLines = 0; for (var i = 0; i < 7; i++) { lines[i] = wrapText(vals[i]||'', widths[i]-1); maxLines = Math.max(maxLines, lines[i].length); } var res = ''; for (var l = 0; l < maxLines; l++) { res += '│'; for (var i = 0; i < 7; i++) { var t = l < lines[i].length ? lines[i][l] : ''; res += ' ' + t.padEnd(widths[i]-1) + '│'; } res += '\n'; } return res; }
+    var text = line('┌','┬','┐') + row(headers) + line('├','┼','┤');
+    for (var i = 0; i < dataArr.length; i++) text += row(dataArr[i]);
+    text += line('└','┴','┘');
+    var tmp = document.createElement('textarea'); tmp.value = text; document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); document.body.removeChild(tmp);
     alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
-}
-
-function openMTKBlank() {
-    if (currentUser && currentUser.role === 'driver') {
-        alert('Водитель не может создавать бланки!');
-        return;
-    }
-    var today = new Date().toISOString().slice(0, 10);
-    if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
-    var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
-    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
-    
-    // Сразу сохраняем пустой бланк в Firebase
-    if (!data.mtkBlanks) data.mtkBlanks = [];
-    data.mtkBlanks.push({
-        id: data.settings.mtkCounter,
-        name: fileName,
-        items: []
-    });
-    
-    data.settings.mtkCounter++; 
-    saveData();
-    
-    document.getElementById('task').value = 'Globus ' + fileName;
-    document.getElementById('from').value = 'Globus';
-    
-    window.open('mtk.html?id=' + (data.settings.mtkCounter - 1) + '&role=dispatcher', 'mtk', 'width=900,height=700');
-}
-function openMTKFromLink(routeId) {
-    var route = null;
-    for (var i = 0; i < data.routes.length; i++) {
-        if (data.routes[i].id === routeId) {
-            route = data.routes[i];
-            break;
-        }
-    }
-    
-    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) {
-        alert('Бланк не найден!');
-        return;
-    }
-    
-    var fileName = route.task.replace('Globus ', '');
-    
-    var blankId = null;
-    if (data.mtkBlanks) {
-        for (var i = 0; i < data.mtkBlanks.length; i++) {
-            if (data.mtkBlanks[i].name === fileName) {
-                blankId = data.mtkBlanks[i].id;
-                break;
-            }
-        }
-    }
-    
-    if (blankId === null) {
-        alert('Бланк не найден в базе!');
-        return;
-    }
-    
-    var role = currentUser ? currentUser.role : '';
-    window.open('mtk.html?id=' + blankId + '&role=' + role, 'mtk_' + blankId, 'width=900,height=700');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
