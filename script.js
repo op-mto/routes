@@ -493,9 +493,42 @@ function copyAsFormattedText() {
     alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
 }
 
-function openMTKFromLink(id) {
+function openMTKFromLink(routeId) {
+    // Находим маршрут по ID
+    var route = null;
+    for (var i = 0; i < data.routes.length; i++) {
+        if (data.routes[i].id === routeId) {
+            route = data.routes[i];
+            break;
+        }
+    }
+    
+    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) {
+        alert('Бланк не найден!');
+        return;
+    }
+    
+    // Извлекаем имя файла из задачи
+    var fileName = route.task.replace('Globus ', '');
+    
+    // Ищем бланк по имени файла
+    var blankId = null;
+    if (data.mtkBlanks) {
+        for (var i = 0; i < data.mtkBlanks.length; i++) {
+            if (data.mtkBlanks[i].name === fileName) {
+                blankId = data.mtkBlanks[i].id;
+                break;
+            }
+        }
+    }
+    
+    if (blankId === null) {
+        alert('Бланк не найден в базе!');
+        return;
+    }
+    
     var role = currentUser ? currentUser.role : '';
-    window.open('mtk.html?id=' + id + '&role=' + role, 'mtk_' + id, 'width=900,height=700');
+    window.open('mtk.html?id=' + blankId + '&role=' + role, 'mtk_' + blankId, 'width=900,height=700');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
