@@ -493,44 +493,32 @@ function copyAsFormattedText() {
     alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
 }
 
-function openMTKFromLink(routeId) {
-    // Находим маршрут по ID
-    var route = null;
-    for (var i = 0; i < data.routes.length; i++) {
-        if (data.routes[i].id === routeId) {
-            route = data.routes[i];
-            break;
-        }
-    }
-    
-    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) {
-        alert('Бланк не найден!');
+function openMTKBlank() {
+    if (currentUser && currentUser.role === 'driver') {
+        alert('Водитель не может создавать бланки!');
         return;
     }
+    var today = new Date().toISOString().slice(0, 10);
+    if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
+    var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
+    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
     
-    // Извлекаем имя файла из задачи
-    var fileName = route.task.replace('Globus ', '');
+    // Сразу сохраняем пустой бланк в Firebase
+    if (!data.mtkBlanks) data.mtkBlanks = [];
+    data.mtkBlanks.push({
+        id: data.settings.mtkCounter,
+        name: fileName,
+        items: []
+    });
     
-    // Ищем бланк по имени файла
-    var blankId = null;
-    if (data.mtkBlanks) {
-        for (var i = 0; i < data.mtkBlanks.length; i++) {
-            if (data.mtkBlanks[i].name === fileName) {
-                blankId = data.mtkBlanks[i].id;
-                break;
-            }
-        }
-    }
+    data.settings.mtkCounter++; 
+    saveData();
     
-    if (blankId === null) {
-        alert('Бланк не найден в базе!');
-        return;
-    }
+    document.getElementById('task').value = 'Globus ' + fileName;
+    document.getElementById('from').value = 'Globus';
     
-    var role = currentUser ? currentUser.role : '';
-    window.open('mtk.html?id=' + blankId + '&role=' + role, 'mtk_' + blankId, 'width=900,height=700');
+    window.open('mtk.html?id=' + (data.settings.mtkCounter - 1) + '&role=dispatcher', 'mtk', 'width=900,height=700');
 }
-
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     document.getElementById('btnLogin').addEventListener('click', login);
