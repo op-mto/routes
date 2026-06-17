@@ -191,8 +191,20 @@ function renderTable() {
         html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
         html += '<td>' + (r.task||'') + '</td><td>' + (r.note||'') + '</td>';
         html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
-        html += '<td>' + (r.internalComment||'') + '</td>';
-        html += '<td><b>' + (r.createdBy||'') + '</b><br><small>' + (r.createdAt||'') + '</small></td><td>';
+// Внутр. комм. — скрываем от водителя
+    if (currentUser && currentUser.role === 'driver') {
+        html += '<td>—</td>';
+    } else {
+        html += '<td>' + (r.internalComment || '') + '</td>';
+    }
+
+// Создал — скрываем от водителя
+    if (currentUser && currentUser.role === 'driver') {
+        html += '<td>—</td>';
+    } else {
+        html += '<td><b>' + (r.createdBy || '') + '</b><br><small>' + (r.createdAt || '') + '</small></td>';
+    }
+        
         if (r.status !== 'Выполнено') html += '<button onclick="completeRoute('+r.id+')" style="background:green;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">OK</button> ';
         if (currentUser && (currentUser.role==='admin'||currentUser.role==='dispatcher')) html += '<button onclick="editRoute('+r.id+')" style="background:orange;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Edit</button> ';
         if (currentUser && currentUser.role==='admin') html += '<button onclick="deleteRoute('+r.id+')" style="background:red;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Del</button>';
