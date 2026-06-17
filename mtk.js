@@ -151,7 +151,7 @@ function saveBlank() {
 
 function copyTable() {
     var rows = document.querySelectorAll('#mtkBody tr');
-    var text = '№ п/п\tНомер детали\tНаименование\tКол-во\tКому\n';
+    var text = '';
     
     for (var i = 0; i < rows.length; i++) {
         var inputs = rows[i].querySelectorAll('input');
