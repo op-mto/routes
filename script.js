@@ -210,11 +210,13 @@ function renderTable() {
             html += '<td><b>' + (r.createdBy||'') + '</b><br><small>' + (r.createdAt||'') + '</small></td>';
         }
         
-        html += '<td>';
-        if (r.status === 'Активно') html += '<button onclick="completeRoute(' + r.id + ')" style="background:green;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">OK</button> ';
-        if (currentUser && (currentUser.role==='admin'||currentUser.role==='dispatcher')) html += '<button onclick="editRoute('+r.id+')" style="background:orange;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Edit</button> ';
-        if (currentUser && currentUser.role==='admin') html += '<button onclick="deleteRoute('+r.id+')" style="background:red;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Del</button>';
-        html += '</td></tr>';
+        if (!isDriver) {
+            html += '<td>';
+            if (r.status === 'Активно') html += '<button onclick="completeRoute(' + r.id + ')" style="background:green;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">OK</button> ';
+            if (currentUser.role === 'admin' || currentUser.role === 'dispatcher') html += '<button onclick="editRoute(' + r.id + ')" style="background:orange;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Edit</button> ';
+            if (currentUser.role === 'admin') html += '<button onclick="deleteRoute(' + r.id + ')" style="background:red;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Del</button>';
+            html += '</td>';
+        }
     }
     
     tbody.innerHTML = html || '<tr><td colspan="' + (isDriver ? '9' : '11') + '">Нет маршрутов</td></tr>';
