@@ -149,7 +149,7 @@ function saveBlank() {
                     date: new Date().toISOString().slice(0, 10),
                     completionDate: '',
                     from: 'Globus',
-                    to: 'РП',
+                    to: '',
                     task: 'Globus ' + blankData.name,
                     note: '',
                     status: 'Активно',
@@ -169,7 +169,7 @@ function saveBlank() {
             xhr2.onload = function() {
                 alert('Бланк и маршрут сохранены!');
                 if (window.opener && !window.opener.closed) {
-                    window.opener.loadData();
+                    window.opener.location.reload();
                 }
                 window.close();
             };
