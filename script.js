@@ -177,40 +177,48 @@ function clearForm() {
 function renderTable() {
     var tbody = document.getElementById('routesBody');
     if (!tbody || !data || !data.routes) return;
+    
+    var isDriver = currentUser && currentUser.role === 'driver';
+    
+    // Обновляем заголовки таблицы
+    var thead = document.querySelector('#routesTable thead tr');
+    if (thead) {
+        thead.innerHTML = '<th>№</th><th>Дата</th><th>Дата вып.</th><th>Откуда</th><th>Куда</th><th>Задача</th><th>Примечание</th><th>Статус</th>' +
+            (isDriver ? '' : '<th>Внутр. комм.</th><th>Создал</th>') +
+            '<th></th>';
+    }
+    
     var searchTerm = (document.getElementById('search')||{}).value || '';
     searchTerm = searchTerm.toLowerCase();
     var routes = data.routes.slice().sort(function(a,b){ return b.id - a.id; });
     var html = '';
+    
     for (var i = 0; i < routes.length; i++) {
         var r = routes[i];
         if (!showCompleted && r.status === 'Выполнено') continue;
         if (searchTerm && (r.task+' '+r.from+' '+r.to+' '+r.note).toLowerCase().indexOf(searchTerm) === -1) continue;
+        
         var sc = { 'Активно':'status-active', 'Ожидание':'status-waiting', 'Выполнено':'status-completed' }[r.status] || '';
         html += '<tr' + (r.status==='Выполнено'?' class="completed"':'') + '>';
         html += '<td>' + r.id + '</td><td>' + (r.date||'') + '</td><td>' + (r.completionDate||'') + '</td>';
         html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
         html += '<td>' + (r.task||'') + '</td><td>' + (r.note||'') + '</td>';
         html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
-// Внутр. комм. — скрываем от водителя
-    if (currentUser && currentUser.role === 'driver') {
-        html += '<td>—</td>';
-    } else {
-        html += '<td>' + (r.internalComment || '') + '</td>';
-    }
-
-// Создал — скрываем от водителя
-    if (currentUser && currentUser.role === 'driver') {
-        html += '<td>—</td>';
-    } else {
-        html += '<td><b>' + (r.createdBy || '') + '</b><br><small>' + (r.createdAt || '') + '</small></td>';
-    }
         
+        if (!isDriver) {
+            html += '<td>' + (r.internalComment||'') + '</td>';
+            html += '<td><b>' + (r.createdBy||'') + '</b><br><small>' + (r.createdAt||'') + '</small></td>';
+        }
+        
+        html += '<td>';
         if (r.status !== 'Выполнено') html += '<button onclick="completeRoute('+r.id+')" style="background:green;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">OK</button> ';
         if (currentUser && (currentUser.role==='admin'||currentUser.role==='dispatcher')) html += '<button onclick="editRoute('+r.id+')" style="background:orange;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Edit</button> ';
         if (currentUser && currentUser.role==='admin') html += '<button onclick="deleteRoute('+r.id+')" style="background:red;color:white;border:none;padding:3px 8px;margin:1px;cursor:pointer;">Del</button>';
         html += '</td></tr>';
     }
-    tbody.innerHTML = html || '<tr><td colspan="11">Нет маршрутов</td></tr>';
+    
+    tbody.innerHTML = html || '<tr><td colspan="' + (isDriver ? '9' : '11') + '">Нет маршрутов</td></tr>';
+    
     document.getElementById('totalCount').textContent = data.routes.length;
     document.getElementById('activeCount').textContent = data.routes.filter(function(r){return r.status==='Активно';}).length;
     document.getElementById('completedCount').textContent = data.routes.filter(function(r){return r.status==='Выполнено';}).length;
