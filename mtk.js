@@ -12,7 +12,6 @@ function loadBlank() {
     blankId = getParam('id');
     userRole = getParam('role') || '';
     
-    // Водитель только смотрит
     if (userRole === 'driver') {
         document.getElementById('btnSave').style.display = 'none';
         document.getElementById('btnAdd').style.display = 'none';
@@ -83,12 +82,15 @@ function addRow(item) {
     var tbody = document.getElementById('mtkBody');
     var row = tbody.insertRow();
     var num = tbody.rows.length;
+    
     row.innerHTML = 
         '<td>' + num + '</td>' +
+        '<td><input type="text" value="' + (item ? (item.partNumber || '') : '') + '"></td>' +
         '<td><input type="text" value="' + (item ? (item.name || '') : '') + '"></td>' +
         '<td><input type="text" value="' + (item ? (item.qty || '') : '') + '" style="width:80px;"></td>' +
         '<td><input type="text" value="' + (item ? (item.to || '') : '') + '" style="width:150px;"></td>' +
         '<td><button onclick="this.closest(\'tr\').remove(); updateNumbers();" class="btn-del">✕</button></td>';
+    
     if (userRole === 'driver') {
         var inputs = row.querySelectorAll('input');
         for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
@@ -106,10 +108,13 @@ function saveBlank() {
     var items = [];
     for (var i = 0; i < rows.length; i++) {
         var inputs = rows[i].querySelectorAll('input');
-        var name = inputs[0]?.value || '';
-        var qty = inputs[1]?.value || '';
-        var to = inputs[2]?.value || '';
-        if (name || qty || to) items.push({ name: name, qty: qty, to: to });
+        var partNumber = inputs[0]?.value || '';
+        var name = inputs[1]?.value || '';
+        var qty = inputs[2]?.value || '';
+        var to = inputs[3]?.value || '';
+        if (partNumber || name || qty || to) {
+            items.push({ partNumber: partNumber, name: name, qty: qty, to: to });
+        }
     }
     blankData.items = items;
     
@@ -142,6 +147,33 @@ function saveBlank() {
         }
     };
     xhr.send();
+}
+
+function copyTable() {
+    var rows = document.querySelectorAll('#mtkBody tr');
+    var text = '№ п/п\tНомер детали\tНаименование\tКол-во\tКому\n';
+    
+    for (var i = 0; i < rows.length; i++) {
+        var inputs = rows[i].querySelectorAll('input');
+        var num = rows[i].cells[0].textContent;
+        var part = inputs[0]?.value || '';
+        var name = inputs[1]?.value || '';
+        var qty = inputs[2]?.value || '';
+        var to = inputs[3]?.value || '';
+        
+        if (part || name || qty || to) {
+            text += num + '\t' + part + '\t' + name + '\t' + qty + '\t' + to + '\n';
+        }
+    }
+    
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    
+    alert('Таблица скопирована!\nВставьте в Excel (Ctrl+V)');
 }
 
 loadBlank();
