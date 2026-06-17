@@ -142,6 +142,11 @@ function saveBlank() {
             xhr2.send(JSON.stringify(data));
             xhr2.onload = function() {
                 alert('Бланк сохранен!');
+                if (window.opener && !window.opener.closed) {
+                    window.opener.loadData();
+                }
+                window.close();
+            };
                 // Не перезагружаем, чтобы не сбить сессию
             };
         }
