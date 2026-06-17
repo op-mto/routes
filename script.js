@@ -140,7 +140,12 @@ function saveRoute() {
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
     });
     data.settings.nextRouteId++;
-    saveData(); updateAddressHistory(); renderTable(); clearForm();
+     saveData(); 
+    updateAddressHistory(); 
+    clearForm();
+    setTimeout(function() { 
+        loadData(); 
+    }, 500);
     alert('Маршрут сохранен!');
 }
 
