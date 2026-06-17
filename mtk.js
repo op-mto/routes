@@ -169,7 +169,9 @@ function saveBlank() {
             xhr2.onload = function() {
                 alert('Бланк и маршрут сохранены!');
                 if (window.opener && !window.opener.closed) {
-                    window.opener.location.reload();
+                    window.opener.loadData();
+                    window.opener.document.getElementById('task').value = '';
+                    window.opener.document.getElementById('from').value = '';
                 }
                 window.close();
             };
