@@ -152,7 +152,7 @@ function saveBlank() {
         }
     };
     xhr.send();
-}
+
 
 function copyTable() {
     var rows = document.querySelectorAll('#mtkBody tr');
