@@ -8,81 +8,59 @@ function getParam(name) {
     return url.searchParams.get(name);
 }
 
-function saveBlank() {
-    var rows = document.querySelectorAll('#mtkBody tr');
-    var items = [];
-    for (var i = 0; i < rows.length; i++) {
-        var inputs = rows[i].querySelectorAll('input');
-        var partNumber = inputs[0]?.value || '';
-        var name = inputs[1]?.value || '';
-        var qty = inputs[2]?.value || '';
-        var to = inputs[3]?.value || '';
-        if (partNumber || name || qty || to) {
-            items.push({ partNumber: partNumber, name: name, qty: qty, to: to });
-        }
-    }
-    blankData.items = items;
+function loadBlank() {
+    blankId = getParam('id');
+    userRole = getParam('role') || '';
     
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', FIREBASE_URL + '/data.json', true);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            var data = JSON.parse(xhr.responseText);
-            if (!data.mtkBlanks) data.mtkBlanks = [];
-            
-            var found = false;
-            for (var i = 0; i < data.mtkBlanks.length; i++) {
-                if (data.mtkBlanks[i].id === blankData.id) {
-                    data.mtkBlanks[i] = blankData;
-                    found = true;
-                    break;
+    if (userRole === 'driver') {
+        document.getElementById('btnSave').style.display = 'none';
+        document.getElementById('btnAdd').style.display = 'none';
+    }
+    
+    if (blankId) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', FIREBASE_URL + '/data.json', true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var data = JSON.parse(xhr.responseText);
+                if (data && data.mtkBlanks) {
+                    for (var i = 0; i < data.mtkBlanks.length; i++) {
+                        if (data.mtkBlanks[i].id == blankId) {
+                            blankData = data.mtkBlanks[i];
+                            document.getElementById('title').textContent = 'Бланк: ' + blankData.name;
+                            document.getElementById('fileName').textContent = blankData.name;
+                            renderRows(blankData.items);
+                            if (userRole === 'driver') disableInputs();
+                            return;
+                        }
+                    }
                 }
             }
-            if (!found) {
-                data.mtkBlanks.push(blankData);
-                if (data.settings) data.settings.mtkCounter = blankData.id + 1;
-                
-                // Создаем маршрут в основной таблице
-                if (!data.routes) data.routes = [];
-                if (!data.settings) data.settings = { nextRouteId: 1 };
-                
-                var now = new Date();
-                var dt = String(now.getDate()).padStart(2,'0') + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear() + ' ' +
-                         String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
-                
-                data.routes.push({
-                    id: data.settings.nextRouteId,
-                    date: new Date().toISOString().slice(0, 10),
-                    completionDate: '',
-                    from: 'Globus',
-                    to: 'РП',
-                    task: 'Globus ' + blankData.name,
-                    note: '',
-                    status: 'Активно',
-                    internalComment: '',
-                    createdBy: 'Диспетчер',
-                    createdAt: dt,
-                    updatedAt: dt,
-                    updatedBy: 'Диспетчер'
-                });
-                data.settings.nextRouteId++;
+            alert('Бланк не найден!');
+        };
+        xhr.send();
+    } else {
+        var today = new Date().toISOString().slice(0, 10);
+        var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
+        
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open('GET', FIREBASE_URL + '/data.json', true);
+        xhr2.onload = function() {
+            var counter = 1;
+            if (xhr2.status === 200) {
+                var data = JSON.parse(xhr2.responseText);
+                if (data && data.settings) counter = data.settings.mtkCounter || 1;
             }
-            
-            var xhr2 = new XMLHttpRequest();
-            xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
-            xhr2.setRequestHeader('Content-Type', 'application/json');
-            xhr2.send(JSON.stringify(data));
-            xhr2.onload = function() {
-                alert('Бланк и маршрут сохранены!');
-                if (window.opener && !window.opener.closed) {
-                    window.opener.loadData();
-                }
-                window.close();
-            };
-        }
-    };
-    xhr.send();
+            var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
+            blankData = { id: counter, name: fileName, items: [] };
+            document.getElementById('title').textContent = 'Новый бланк: ' + fileName;
+            document.getElementById('fileName').textContent = fileName;
+            addRow(); addRow(); addRow();
+        };
+        xhr2.send();
+    }
 }
+
 function disableInputs() {
     var inputs = document.querySelectorAll('input');
     for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
@@ -146,6 +124,7 @@ function saveBlank() {
         if (xhr.status === 200) {
             var data = JSON.parse(xhr.responseText);
             if (!data.mtkBlanks) data.mtkBlanks = [];
+            
             var found = false;
             for (var i = 0; i < data.mtkBlanks.length; i++) {
                 if (data.mtkBlanks[i].id === blankData.id) {
@@ -157,13 +136,38 @@ function saveBlank() {
             if (!found) {
                 data.mtkBlanks.push(blankData);
                 if (data.settings) data.settings.mtkCounter = blankData.id + 1;
+                
+                if (!data.routes) data.routes = [];
+                if (!data.settings) data.settings = { nextRouteId: 1 };
+                
+                var now = new Date();
+                var dt = String(now.getDate()).padStart(2,'0') + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear() + ' ' +
+                         String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+                
+                data.routes.push({
+                    id: data.settings.nextRouteId,
+                    date: new Date().toISOString().slice(0, 10),
+                    completionDate: '',
+                    from: 'Globus',
+                    to: 'РП',
+                    task: 'Globus ' + blankData.name,
+                    note: '',
+                    status: 'Активно',
+                    internalComment: '',
+                    createdBy: 'Диспетчер',
+                    createdAt: dt,
+                    updatedAt: dt,
+                    updatedBy: 'Диспетчер'
+                });
+                data.settings.nextRouteId++;
             }
+            
             var xhr2 = new XMLHttpRequest();
             xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
             xhr2.setRequestHeader('Content-Type', 'application/json');
             xhr2.send(JSON.stringify(data));
             xhr2.onload = function() {
-                alert('Бланк сохранен!');
+                alert('Бланк и маршрут сохранены!');
                 if (window.opener && !window.opener.closed) {
                     window.opener.loadData();
                 }
