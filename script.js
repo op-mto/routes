@@ -23,14 +23,15 @@ function getCurrentDateTime() {
 
 function loadData() {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', FIREBASE_URL + '/data.json', true);
+    xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
     xhr.onload = function() {
         if (xhr.status === 200 && xhr.responseText !== 'null' && xhr.responseText !== '') {
             try {
                 var loaded = JSON.parse(xhr.responseText);
-                if (loaded && loaded.users) data.users = loaded.users;
                 if (loaded && loaded.routes) data.routes = loaded.routes;
+                if (loaded && loaded.users) data.users = loaded.users;
                 if (loaded && loaded.settings) data.settings = loaded.settings;
+                if (loaded && loaded.mtkBlanks) data.mtkBlanks = loaded.mtkBlanks;
             } catch(e) {}
         }
         if (!data.routes) data.routes = [];
