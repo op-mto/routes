@@ -177,6 +177,7 @@ function clearForm() {
 function renderTable() {
     var tbody = document.getElementById('routesBody');
     if (!tbody || !data || !data.routes) return;
+    if (!currentUser) { loadData(); return; }
     
     var isDriver = currentUser && currentUser.role === 'driver';
     
