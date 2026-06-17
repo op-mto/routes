@@ -123,6 +123,11 @@ function saveBlank() {
     xhr.onload = function() {
         if (xhr.status === 200) {
             var data = JSON.parse(xhr.responseText);
+            
+            // Сохраняем все существующие данные
+            if (!data.routes) data.routes = [];
+            if (!data.settings) data.settings = { nextRouteId: 1, nextUserId: 4 };
+            if (!data.users) data.users = [];
             if (!data.mtkBlanks) data.mtkBlanks = [];
             
             var found = false;
@@ -136,9 +141,6 @@ function saveBlank() {
             if (!found) {
                 data.mtkBlanks.push(blankData);
                 if (data.settings) data.settings.mtkCounter = blankData.id + 1;
-                
-                if (!data.routes) data.routes = [];
-                if (!data.settings) data.settings = { nextRouteId: 1 };
                 
                 var now = new Date();
                 var dt = String(now.getDate()).padStart(2,'0') + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear() + ' ' +
