@@ -298,14 +298,18 @@ function renderUsers() {
 }
 
 function openMTKBlank() {
+    if (currentUser && currentUser.role === 'driver') {
+        alert('Водитель не может создавать бланки!');
+        return;
+    }
     var today = new Date().toISOString().slice(0, 10);
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
     var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
-    window.currentMTKFile = { name: fileName, path: 'mtk/' + fileName };
     data.settings.mtkCounter++; saveData();
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
+    window.open('mtk.html', 'mtk', 'width=900,height=700');
 }
 
 function exportJSON() {
@@ -481,6 +485,12 @@ function copyAsFormattedText() {
     
     alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
 }
+
+function openMTKFromLink(id) {
+    var role = currentUser ? currentUser.role : '';
+    window.open('mtk.html?id=' + id + '&role=' + role, 'mtk_' + id, 'width=900,height=700');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
     document.getElementById('btnLogin').addEventListener('click', login);
