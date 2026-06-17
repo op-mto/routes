@@ -49,6 +49,12 @@ function saveData() {
     var xhr = new XMLHttpRequest();
     xhr.open('PUT', FIREBASE_URL + '/data.json', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+        console.log('Save status:', xhr.status);
+    };
+    xhr.onerror = function() {
+        console.log('Save error');
+    };
     xhr.send(JSON.stringify(data));
 }
 
