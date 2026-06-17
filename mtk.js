@@ -43,12 +43,12 @@ function loadBlank() {
         var today = new Date().toISOString().slice(0, 10);
         var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
         
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', FIREBASE_URL + '/data.json', true);
-        xhr.onload = function() {
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open('GET', FIREBASE_URL + '/data.json', true);
+        xhr2.onload = function() {
             var counter = 1;
-            if (xhr.status === 200) {
-                var data = JSON.parse(xhr.responseText);
+            if (xhr2.status === 200) {
+                var data = JSON.parse(xhr2.responseText);
                 if (data && data.settings) counter = data.settings.mtkCounter || 1;
             }
             var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
@@ -57,7 +57,7 @@ function loadBlank() {
             document.getElementById('fileName').textContent = fileName;
             addRow(); addRow(); addRow();
         };
-        xhr.send();
+        xhr2.send();
     }
 }
 
@@ -147,12 +147,10 @@ function saveBlank() {
                 }
                 window.close();
             };
-                // Не перезагружаем, чтобы не сбить сессию
-            };
         }
     };
     xhr.send();
-
+}
 
 function copyTable() {
     var rows = document.querySelectorAll('#mtkBody tr');
