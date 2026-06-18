@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактирование маршрута</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; padding: 20px; background: #f0f2f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        h2 { color: #4a7a8c; margin-bottom: 20px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; margin-bottom: 10px; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; margin-right: 10px; }
+        .btn-save { background: #4CAF50; color: white; }
+        .btn-close { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Редактирование маршрута</h2>
+        <label>Дата:</label>
+        <input type="date" id="date">
+        <label>Дата вып.:</label>
+        <input type="date" id="completionDate">
+        <label>Откуда:</label>
+        <input type="text" id="from">
+        <label>Куда:</label>
+        <input type="text" id="to">
+        <label>Задача:</label>
+        <textarea id="task" rows="3"></textarea>
+        <label>Примечание:</label>
+        <textarea id="note" rows="2"></textarea>
+        <label>Статус:</label>
+        <select id="status">
+            <option value="Активно">Активно</option>
+            <option value="Ожидание">Ожидание</option>
+            <option value="Выполнено">Выполнено</option>
+        </select>
+        <label>Внутр. комм.:</label>
+        <textarea id="internalComment" rows="2"></textarea>
+        <br>
+        <button onclick="save()" class="btn-save">Сохранить</button>
+        <button onclick="window.close()" class="btn-close">Закрыть</button>
+    </div>
+    <script src="edit.js"></script>
+</body>
+</html>
