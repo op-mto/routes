@@ -215,6 +215,7 @@ function completeRoute(id) {
     saveData(); renderTable();
 }
 
+/*  это функция редактирования на основной странице
 function editRoute(id) {
     for (var i = 0; i < data.routes.length; i++) {
         if (data.routes[i].id === id) {
@@ -242,6 +243,11 @@ function editRoute(id) {
             break;
         }
     }
+}*/
+/* эта на отдельной */
+function editRoute(id) {
+    var role = currentUser ? currentUser.role : '';
+    window.open('edit.html?id=' + id + '&role=' + role, 'edit_' + id, 'width=700,height=600');
 }
 
 function updateRoute(id) {
