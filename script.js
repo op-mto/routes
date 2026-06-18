@@ -330,7 +330,8 @@ function renderUsers() {
 
 function openMTKBlank() {
     if (currentUser && currentUser.role === 'driver') { alert('Водитель не может создавать бланки!'); return; }
-    window.open('mtk.html', 'mtk', 'width=900,height=700');
+    var userName = currentUser ? currentUser.name : 'Диспетчер';
+window.open('mtk.html?user=' + encodeURIComponent(userName), 'mtk', 'width=900,height=700');
 }
 
 function openMTKFromLink(routeId) {
