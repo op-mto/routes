@@ -98,16 +98,17 @@ function saveBlank() {
             xhr2.setRequestHeader('Content-Type', 'application/json');
             xhr2.send(JSON.stringify(data));
             xhr2.onload = function() {
-                // Обновляем основное окно
-                if (window.opener && !window.opener.closed) {
-    window.opener.loadData();
-    setTimeout(function() { 
-        window.opener.renderTable(); 
-    }, 1000);
-}
-                alert('Бланк и маршрут сохранены!');
-                window.close();
-            };
+    alert('Бланк и маршрут сохранены!');
+    if (window.opener && !window.opener.closed) {
+        window.opener.document.getElementById('task').value = '';
+        window.opener.document.getElementById('from').value = '';
+        window.opener.loadData();
+        setTimeout(function() { 
+            window.opener.renderTable(); 
+        }, 1000);
+    }
+    window.close();
+};
         }
     };
     xhr.send();
