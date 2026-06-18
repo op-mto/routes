@@ -298,12 +298,19 @@ function openMTKBlank() {
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
     var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
+    
+    // Сразу сохраняем пустой бланк в Firebase
     if (!data.mtkBlanks) data.mtkBlanks = [];
-    data.mtkBlanks.push({ id: data.settings.mtkCounter, name: fileName, items: [] });
-    data.settings.mtkCounter++; saveData();
+    var newBlank = { id: data.settings.mtkCounter, name: fileName, items: [] };
+    data.mtkBlanks.push(newBlank);
+    data.settings.mtkCounter++; 
+    saveData();
+    
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
-    window.open('mtk.html?id=' + (data.settings.mtkCounter - 1) + '&role=dispatcher', 'mtk', 'width=900,height=700');
+    
+    // Открываем бланк с правильным ID
+    window.open('mtk.html?id=' + newBlank.id + '&role=dispatcher', 'mtk', 'width=900,height=700');
 }
 
 function openMTKFromLink(routeId) {
