@@ -47,6 +47,79 @@ function saveBlank() {
         }
     }
     
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', FIREBASE_URL + '/data.json', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            if (!data.mtkBlanks) data.mtkBlanks = [];
+            if (!data.routes) data.routes = [];
+            if (!data.settings) data.settings = { nextRouteId: 1 };
+            
+            // Проверяем — есть ли уже маршрут для этого бланка
+            var routeExists = false;
+            for (var i = 0; i < data.routes.length; i++) {
+                if (data.routes[i].task === 'Globus ' + blankData.name) {
+                    routeExists = true;
+                    break;
+                }
+            }
+            
+            // Создаём маршрут только если его ещё нет
+            if (!routeExists) {
+                var now = new Date();
+                var dt = String(now.getDate()).padStart(2,'0') + '.' + 
+                         String(now.getMonth()+1).padStart(2,'0') + '.' + 
+                         now.getFullYear() + ' ' +
+                         String(now.getHours()).padStart(2,'0') + ':' + 
+                         String(now.getMinutes()).padStart(2,'0') + ':' + 
+                         String(now.getSeconds()).padStart(2,'0');
+                
+                data.routes.push({
+                    id: data.settings.nextRouteId,
+                    date: new Date().toISOString().slice(0, 10),
+                    completionDate: '',
+                    from: 'Globus',
+                    to: '',
+                    task: 'Globus ' + blankData.name,
+                    note: '',
+                    status: 'Активно',
+                    internalComment: '',
+                    createdBy: 'Диспетчер',
+                    createdAt: dt,
+                    updatedAt: dt,
+                    updatedBy: 'Диспетчер'
+                });
+                data.settings.nextRouteId++;
+            }
+            
+            // Обновляем бланк
+            for (var i = 0; i < data.mtkBlanks.length; i++) {
+                if (data.mtkBlanks[i].id === blankData.id) {
+                    data.mtkBlanks[i].items = items;
+                    break;
+                }
+            }
+            
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
+            xhr2.setRequestHeader('Content-Type', 'application/json');
+            xhr2.send(JSON.stringify(data));
+            xhr2.onload = function() {
+                alert('Бланк сохранен!');
+                if (window.opener && !window.opener.closed) {
+                    window.opener.document.getElementById('task').value = '';
+                    window.opener.document.getElementById('from').value = '';
+                    window.opener.loadData();
+                    setTimeout(function() { window.opener.renderTable(); }, 1000);
+                }
+                window.close();
+            };
+        }
+    };
+    xhr.send();
+}
+    
     // Загружаем свежие данные из Firebase
     var xhr = new XMLHttpRequest();
     xhr.open('GET', FIREBASE_URL + '/data.json', true);
