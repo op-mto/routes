@@ -138,29 +138,7 @@ function saveRoute() {
     alert('Маршрут сохранен!');
 }
 
-function updateRoute(id) {
-    var from = document.getElementById('from').value.trim();
-    var to = document.getElementById('to').value.trim();
-    var task = document.getElementById('task').value.trim();
-    if (!from || !to || !task) { alert('Заполните поля!'); return; }
-    for (var i = 0; i < data.routes.length; i++) {
-        if (data.routes[i].id === id) {
-            data.routes[i].date = document.getElementById('date').value || '';
-            data.routes[i].completionDate = document.getElementById('completionDate').value || '';
-            data.routes[i].from = from; data.routes[i].to = to; data.routes[i].task = task;
-            data.routes[i].note = document.getElementById('note').value || '';
-            data.routes[i].status = document.getElementById('status').value;
-            data.routes[i].internalComment = document.getElementById('internalComment').value || '';
-            data.routes[i].updatedAt = getCurrentDateTime();
-            data.routes[i].updatedBy = currentUser ? currentUser.name : '';
-            break;
-        }
-    }
-    saveData(); renderTable(); clearForm();
-    var btn = document.querySelector('.btn-save');
-    if (btn) { btn.textContent = 'Сохранить'; btn.setAttribute('onclick', 'saveRoute()'); }
-    alert('Маршрут №' + id + ' обновлен!');
-}
+
 
 function clearForm() {
     ['date','completionDate','from','to','task','note','internalComment'].forEach(function(id) {
@@ -245,15 +223,65 @@ function editRoute(id) {
             document.getElementById('completionDate').value = r.completionDate || '';
             document.getElementById('from').value = r.from || '';
             document.getElementById('to').value = r.to || '';
-            document.getElementById('task').value = r.task || '';
+            
+            // Если задача из бланка - не даём редактировать
+            if (r.task && r.task.indexOf('Globus ') === 0) {
+                document.getElementById('task').value = r.task || '';
+                document.getElementById('task').disabled = true;
+            } else {
+                document.getElementById('task').value = r.task || '';
+                document.getElementById('task').disabled = false;
+            }
+            
             document.getElementById('note').value = r.note || '';
             document.getElementById('status').value = r.status || 'Активно';
             document.getElementById('internalComment').value = r.internalComment || '';
+            
             var btn = document.querySelector('.btn-save');
             if (btn) { btn.textContent = 'Обновить'; btn.setAttribute('onclick', 'updateRoute(' + id + ')'); }
             break;
         }
     }
+}
+
+function updateRoute(id) {
+    var from = document.getElementById('from').value.trim();
+    var to = document.getElementById('to').value.trim();
+    var task = document.getElementById('task').value.trim();
+    
+    // Если задача заблокирована - используем старую
+    if (document.getElementById('task').disabled) {
+        for (var i = 0; i < data.routes.length; i++) {
+            if (data.routes[i].id === id) {
+                task = data.routes[i].task;
+                break;
+            }
+        }
+    }
+    
+    if (!from || !to || !task) { alert('Заполните Откуда и Куда!'); return; }
+    if (!document.getElementById('date').value) { alert('Заполните Дату!'); return; }
+    
+    for (var i = 0; i < data.routes.length; i++) {
+        if (data.routes[i].id === id) {
+            data.routes[i].date = document.getElementById('date').value;
+            data.routes[i].completionDate = document.getElementById('completionDate').value || '';
+            data.routes[i].from = from; data.routes[i].to = to; data.routes[i].task = task;
+            data.routes[i].note = document.getElementById('note').value || '';
+            data.routes[i].status = document.getElementById('status').value;
+            data.routes[i].internalComment = document.getElementById('internalComment').value || '';
+            data.routes[i].updatedAt = getCurrentDateTime();
+            data.routes[i].updatedBy = currentUser ? currentUser.name : '';
+            break;
+        }
+    }
+    saveData(); renderTable(); clearForm();
+    
+    var btn = document.querySelector('.btn-save');
+    if (btn) { btn.textContent = 'Сохранить'; btn.setAttribute('onclick', 'saveRoute()'); }
+    document.getElementById('task').disabled = false;
+    
+    alert('Маршрут №' + id + ' обновлен!');
 }
 
 function deleteRoute(id) {
