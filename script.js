@@ -450,10 +450,10 @@ function screenshotTable() {
     if (vis.length === 0) { alert('Нет данных!'); return; }
     
     var t = document.createElement('table');
-    t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:40px;position:absolute;left:-9999px;';
+    t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:20px;position:absolute;left:-9999px;';
     var h = '<thead><tr>';
     ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) {
-        h += '<th style="border:1px solid #999;padding:10px 14px;background:#4a7a8c;color:white;font-size:20px;">' + x + '</th>';
+        h += '<th style="border:1px solid #999;padding:10px 14px;background:#4a7a8c;color:white;font-size:40px;">' + x + '</th>';
     });
     h += '</tr></thead><tbody>';
     
