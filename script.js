@@ -172,7 +172,9 @@ function renderTable() {
         
         var sc = { 'Активно':'status-active', 'Ожидание':'status-waiting', 'Выполнено':'status-completed' }[r.status] || '';
         html += '<tr' + (r.status==='Выполнено'?' class="completed"':'') + '>';
-        html += '<td>' + r.id + '</td><td>' + (r.date||'') + '</td><td>' + (r.completionDate||'') + '</td>';
+        var dateFormatted = r.date ? r.date.slice(8,10) + '.' + r.date.slice(5,7) + '.' + r.date.slice(2,4) : '';
+var complDateFormatted = r.completionDate ? r.completionDate.slice(8,10) + '.' + r.completionDate.slice(5,7) + '.' + r.completionDate.slice(2,4) : '';
+html += '<td>' + r.id + '</td><td>' + dateFormatted + '</td><td>' + complDateFormatted + '</td>';
         html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
         html += '<td>';
         if (r.task && r.task.indexOf('Globus ') === 0) {
