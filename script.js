@@ -445,7 +445,22 @@ function copyAsFormattedText() {
     if (dataArr.length === 0) { alert('Нет данных!'); return; }
     var widths = [5, 12, 12, 12, 8, 35, 15];
     var headers = ['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание'];
-    function wrapText(text, width) { if (text.length <= width) return [text]; var lines = [], r = text; while (r.length > width) { lines.push(r.substring(0, width)); r = r.substring(width); } if (r.length > 0) lines.push(r); return lines; }
+    function wrapText(text, width) {
+    if (text.length <= width) return [text];
+    var words = text.split(' ');
+    var lines = [];
+    var line = '';
+    for (var i = 0; i < words.length; i++) {
+        if ((line + words[i]).length <= width) {
+            line += (line ? ' ' : '') + words[i];
+        } else {
+            if (line) lines.push(line);
+            line = words[i];
+        }
+    }
+    if (line) lines.push(line);
+    return lines.length > 0 ? lines : [text];
+}
     function line(l, m, r) { var s = l; for (var i = 0; i < 7; i++) s += '─'.repeat(widths[i]) + m; return s.substring(0, s.length-1) + r + '\n'; }
     function row(vals) { var lines = [], maxLines = 0; for (var i = 0; i < 7; i++) { lines[i] = wrapText(vals[i]||'', widths[i]-1); maxLines = Math.max(maxLines, lines[i].length); } var res = ''; for (var l = 0; l < maxLines; l++) { res += '│'; for (var i = 0; i < 7; i++) { var t = l < lines[i].length ? lines[i][l] : ''; res += ' ' + t.padEnd(widths[i]-1) + '│'; } res += '\n'; } return res; }
     var text = line('┌','┬','┐') + row(headers) + line('├','┼','┤');
