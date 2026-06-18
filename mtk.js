@@ -100,8 +100,11 @@ function saveBlank() {
             xhr2.onload = function() {
                 // Обновляем основное окно
                 if (window.opener && !window.opener.closed) {
-                    window.opener.loadData();
-                }
+    window.opener.loadData();
+    setTimeout(function() { 
+        window.opener.renderTable(); 
+    }, 1000);
+}
                 alert('Бланк и маршрут сохранены!');
                 window.close();
             };
