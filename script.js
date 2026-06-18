@@ -440,34 +440,45 @@ function copyAsImage() {
 
 function copyAsFormattedText() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
-    var dataArr = [];
-    for (var i = 0; i < rows.length; i++) { if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) { var cells = rows[i].querySelectorAll('td'); dataArr.push([cells[0]?cells[0].textContent.trim():'', cells[1]?cells[1].textContent.trim():'', cells[2]?cells[2].textContent.trim():'', cells[3]?cells[3].textContent.trim():'', cells[4]?cells[4].textContent.trim():'', cells[5]?cells[5].textContent.trim():'', cells[6]?cells[6].textContent.trim():'']); } }
-    if (dataArr.length === 0) { alert('Нет данных!'); return; }
-    var widths = [5, 12, 12, 12, 8, 35, 15];
-    var headers = ['№', 'Дата', 'Дата вып.', 'Откуда', 'Куда', 'Задача', 'Примечание'];
-    function wrapText(text, width) {
-    if (text.length <= width) return [text];
-    var words = text.split(' ');
-    var lines = [];
-    var line = '';
-    for (var i = 0; i < words.length; i++) {
-        if ((line + words[i]).length <= width) {
-            line += (line ? ' ' : '') + words[i];
+    var text = '';
+    
+    // Заголовки
+    text += '№ | Дата | Вып | Откуда | Куда | Задача | Примечание\n';
+    text += '—'.repeat(50) + '\n';
+    
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].style.display === 'none') continue;
+        if (rows[i].classList.contains('completed')) continue;
+        
+        var cells = rows[i].querySelectorAll('td');
+        var line = [
+            cells[0] ? cells[0].textContent.trim() : '',
+            cells[1] ? cells[1].textContent.trim() : '',
+            cells[2] ? cells[2].textContent.trim() : '',
+            cells[3] ? cells[3].textContent.trim() : '',
+            cells[4] ? cells[4].textContent.trim() : '',
+            cells[5] ? cells[5].textContent.trim() : '',
+            cells[6] ? cells[6].textContent.trim() : ''
+        ];
+        
+        // Если задача длинная — переносим на новую строку
+        if (line[5].length > 30) {
+            text += line[0] + ' | ' + line[1] + ' | ' + line[2] + ' | ' + line[3] + ' | ' + line[4] + '\n';
+            text += '  Задача: ' + line[5] + '\n';
+            if (line[6]) text += '  Прим: ' + line[6] + '\n';
         } else {
-            if (line) lines.push(line);
-            line = words[i];
+            text += line.join(' | ') + '\n';
         }
     }
-    if (line) lines.push(line);
-    return lines.length > 0 ? lines : [text];
-}
-    function line(l, m, r) { var s = l; for (var i = 0; i < 7; i++) s += '─'.repeat(widths[i]) + m; return s.substring(0, s.length-1) + r + '\n'; }
-    function row(vals) { var lines = [], maxLines = 0; for (var i = 0; i < 7; i++) { lines[i] = wrapText(vals[i]||'', widths[i]-1); maxLines = Math.max(maxLines, lines[i].length); } var res = ''; for (var l = 0; l < maxLines; l++) { res += '│'; for (var i = 0; i < 7; i++) { var t = l < lines[i].length ? lines[i][l] : ''; res += ' ' + t.padEnd(widths[i]-1) + '│'; } res += '\n'; } return res; }
-    var text = line('┌','┬','┐') + row(headers) + line('├','┼','┤');
-    for (var i = 0; i < dataArr.length; i++) text += row(dataArr[i]);
-    text += line('└','┴','┘');
-    var tmp = document.createElement('textarea'); tmp.value = text; document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); document.body.removeChild(tmp);
-    alert('Таблица скопирована!\nВставьте в Telegram (Ctrl+V)');
+    
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    
+    alert('Скопировано!\nВставьте в Telegram (Ctrl+V)');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
