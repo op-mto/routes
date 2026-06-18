@@ -150,10 +150,10 @@ function saveBlank() {
                     note: '',
                     status: 'Активно',
                     internalComment: '',
-                    createdBy: 'Диспетчер',
+                    createdBy: getParam('user') || 'Диспетчер',
                     createdAt: dt,
                     updatedAt: dt,
-                    updatedBy: 'Диспетчер'
+                    createdBy: getParam('user') || 'Диспетчер',
                 });
                 data.settings.nextRouteId++;
             }
