@@ -34,29 +34,80 @@ function addRow(item) {
 function updateNumbers() { var rows = document.querySelectorAll('#mtkBody tr'); for (var i = 0; i < rows.length; i++) rows[i].cells[0].textContent = i + 1; }
 
 function saveBlank() {
-    var rows = document.querySelectorAll('#mtkBody tr'); var items = [];
-    for (var i = 0; i < rows.length; i++) { var inputs = rows[i].querySelectorAll('input'); var partNumber = inputs[0]?.value||'', name = inputs[1]?.value||'', qty = inputs[2]?.value||'', to = inputs[3]?.value||''; if (partNumber||name||qty||to) items.push({partNumber:partNumber, name:name, qty:qty, to:to}); }
-    blankData.items = items;
-    var xhr = new XMLHttpRequest(); xhr.open('GET', FIREBASE_URL + '/data.json', true);
+    var rows = document.querySelectorAll('#mtkBody tr');
+    var items = [];
+    for (var i = 0; i < rows.length; i++) {
+        var inputs = rows[i].querySelectorAll('input');
+        var partNumber = inputs[0]?.value || '';
+        var name = inputs[1]?.value || '';
+        var qty = inputs[2]?.value || '';
+        var to = inputs[3]?.value || '';
+        if (partNumber || name || qty || to) {
+            items.push({ partNumber: partNumber, name: name, qty: qty, to: to });
+        }
+    }
+    
+    // Загружаем свежие данные из Firebase
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', FIREBASE_URL + '/data.json', true);
     xhr.onload = function() {
         if (xhr.status === 200) {
             var data = JSON.parse(xhr.responseText);
-            if (!data.routes) data.routes = []; if (!data.settings) data.settings = { nextRouteId: 1, nextUserId: 4 }; if (!data.users) data.users = []; if (!data.mtkBlanks) data.mtkBlanks = [];
-            var found = false; for (var i = 0; i < data.mtkBlanks.length; i++) { if (data.mtkBlanks[i].id === blankData.id) { data.mtkBlanks[i] = blankData; found = true; break; } }
-            if (!found) {
-                data.mtkBlanks.push(blankData); if (data.settings) data.settings.mtkCounter = blankData.id + 1;
-                var now = new Date(), dt = String(now.getDate()).padStart(2,'0')+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+now.getFullYear()+' '+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
-                data.routes.push({ id: data.settings.nextRouteId, date: new Date().toISOString().slice(0,10), completionDate: '', from: 'Globus', to: '', task: 'Globus ' + blankData.name, note: '', status: 'Активно', internalComment: '', createdBy: 'Диспетчер', createdAt: dt, updatedAt: dt, updatedBy: 'Диспетчер' });
-                data.settings.nextRouteId++;
+            
+            // Обновляем бланк
+            if (!data.mtkBlanks) data.mtkBlanks = [];
+            for (var i = 0; i < data.mtkBlanks.length; i++) {
+                if (data.mtkBlanks[i].id === blankData.id) {
+                    data.mtkBlanks[i].items = items;
+                    break;
+                }
             }
-            var xhr2 = new XMLHttpRequest(); xhr2.open('PUT', FIREBASE_URL + '/data.json', true); xhr2.setRequestHeader('Content-Type','application/json'); xhr2.send(JSON.stringify(data));
+            
+            // Создаём маршрут
+            if (!data.routes) data.routes = [];
+            if (!data.settings) data.settings = { nextRouteId: 1 };
+            
+            var now = new Date();
+            var dt = String(now.getDate()).padStart(2,'0') + '.' + 
+                     String(now.getMonth()+1).padStart(2,'0') + '.' + 
+                     now.getFullYear() + ' ' +
+                     String(now.getHours()).padStart(2,'0') + ':' + 
+                     String(now.getMinutes()).padStart(2,'0') + ':' + 
+                     String(now.getSeconds()).padStart(2,'0');
+            
+            data.routes.push({
+                id: data.settings.nextRouteId,
+                date: new Date().toISOString().slice(0, 10),
+                completionDate: '',
+                from: 'Globus',
+                to: '',
+                task: 'Globus ' + blankData.name,
+                note: '',
+                status: 'Активно',
+                internalComment: '',
+                createdBy: 'Диспетчер',
+                createdAt: dt,
+                updatedAt: dt,
+                updatedBy: 'Диспетчер'
+            });
+            data.settings.nextRouteId++;
+            
+            // Сохраняем всё в Firebase
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
+            xhr2.setRequestHeader('Content-Type', 'application/json');
+            xhr2.send(JSON.stringify(data));
             xhr2.onload = function() {
+                // Обновляем основное окно
+                if (window.opener && !window.opener.closed) {
+                    window.opener.loadData();
+                }
                 alert('Бланк и маршрут сохранены!');
-                if (window.opener && !window.opener.closed) { window.opener.loadData(); window.opener.document.getElementById('task').value = ''; window.opener.document.getElementById('from').value = ''; setTimeout(function(){ window.opener.renderTable(); }, 500); }
                 window.close();
             };
         }
-    }; xhr.send();
+    };
+    xhr.send();
 }
 
 function copyTable() {
