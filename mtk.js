@@ -74,9 +74,13 @@ function saveBlank() {
             }
             for (var i = 0; i < data.mtkBlanks.length; i++) { if (data.mtkBlanks[i].id === blankData.id) { data.mtkBlanks[i].items = items; break; } }
             var xhr2 = new XMLHttpRequest(); xhr2.open('PUT', FIREBASE_URL + '/data.json', true); xhr2.setRequestHeader('Content-Type','application/json'); xhr2.send(JSON.stringify(data));
-            xhr2.onload = function() {
+           xhr2.onload = function() {
                 alert('Сохранено!');
-                if (window.opener && !window.opener.closed) { window.opener.loadData(); setTimeout(function(){ window.opener.renderTable(); }, 500); }
+                if (window.opener && !window.opener.closed) {
+                    window.opener.clearForm();
+                    window.opener.loadData();
+                    setTimeout(function(){ window.opener.renderTable(); }, 500);
+                }
                 window.close();
             };
         }
