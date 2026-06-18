@@ -329,12 +329,39 @@ function openMTKBlank() {
 
 function openMTKFromLink(routeId) {
     var route = null;
-    for (var i = 0; i < data.routes.length; i++) { if (data.routes[i].id === routeId) { route = data.routes[i]; break; } }
-    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) { alert('Бланк не найден!'); return; }
+    for (var i = 0; i < data.routes.length; i++) { 
+        if (data.routes[i].id === routeId) { route = data.routes[i]; break; } 
+    }
+    if (!route || !route.task || route.task.indexOf('Globus ') !== 0) { 
+        alert('Бланк не найден!'); 
+        return; 
+    }
     var fileName = route.task.replace('Globus ', '');
     var blankId = null;
-    if (data.mtkBlanks) { for (var i = 0; i < data.mtkBlanks.length; i++) { if (data.mtkBlanks[i].name === fileName) { blankId = data.mtkBlanks[i].id; break; } } }
-    if (blankId === null) { alert('Бланк не найден в базе!'); return; }
+    if (data.mtkBlanks) { 
+        for (var i = 0; i < data.mtkBlanks.length; i++) { 
+            if (data.mtkBlanks[i].name === fileName) { 
+                blankId = data.mtkBlanks[i].id; 
+                break; 
+            } 
+        } 
+    }
+    if (blankId === null) { 
+        loadData();
+        setTimeout(function() {
+            if (data.mtkBlanks) {
+                for (var i = 0; i < data.mtkBlanks.length; i++) {
+                    if (data.mtkBlanks[i].name === fileName) {
+                        var role = currentUser ? currentUser.role : '';
+                        window.open('mtk.html?id=' + data.mtkBlanks[i].id + '&role=' + role, 'mtk_' + data.mtkBlanks[i].id, 'width=900,height=700');
+                        return;
+                    }
+                }
+            }
+            alert('Бланк не найден в базе!');
+        }, 500);
+        return; 
+    }
     var role = currentUser ? currentUser.role : '';
     window.open('mtk.html?id=' + blankId + '&role=' + role, 'mtk_' + blankId, 'width=900,height=700');
 }
