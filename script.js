@@ -294,23 +294,37 @@ function renderUsers() {
 
 function openMTKBlank() {
     if (currentUser && currentUser.role === 'driver') { alert('Водитель не может создавать бланки!'); return; }
+    
     var today = new Date().toISOString().slice(0, 10);
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
     var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
     var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + data.settings.mtkCounter + '.xlsx';
-    
-    // Сразу сохраняем пустой бланк в Firebase
-    if (!data.mtkBlanks) data.mtkBlanks = [];
-    var newBlank = { id: data.settings.mtkCounter, name: fileName, items: [] };
-    data.mtkBlanks.push(newBlank);
-    data.settings.mtkCounter++; 
-    saveData();
+    var newId = data.settings.mtkCounter;
     
     document.getElementById('task').value = 'Globus ' + fileName;
     document.getElementById('from').value = 'Globus';
+    data.settings.mtkCounter++; 
     
-    // Открываем бланк с правильным ID
-    window.open('mtk.html?id=' + newBlank.id + '&role=dispatcher', 'mtk', 'width=900,height=700');
+    // Загружаем свежие данные из Firebase, добавляем бланк, сохраняем
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', FIREBASE_URL + '/data.json', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var freshData = JSON.parse(xhr.responseText);
+            if (!freshData.mtkBlanks) freshData.mtkBlanks = [];
+            freshData.mtkBlanks.push({ id: newId, name: fileName, items: [] });
+            freshData.settings.mtkCounter = data.settings.mtkCounter;
+            
+            var xhr2 = new XMLHttpRequest();
+            xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
+            xhr2.setRequestHeader('Content-Type', 'application/json');
+            xhr2.send(JSON.stringify(freshData));
+            xhr2.onload = function() {
+                window.open('mtk.html?id=' + newId + '&role=dispatcher', 'mtk', 'width=900,height=700');
+            };
+        }
+    };
+    xhr.send();
 }
 
 function openMTKFromLink(routeId) {
