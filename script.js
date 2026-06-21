@@ -535,6 +535,15 @@ function copyAsFormattedText() {
     
     alert('Скопировано!\nВставьте в Telegram (Ctrl+V)');
 }
+function copyTask(text) {
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    document.body.removeChild(tmp);
+    alert('Задача скопирована!');
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
