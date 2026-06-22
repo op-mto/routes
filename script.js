@@ -446,7 +446,7 @@ function copyAsImage() {
     });
 } */
  
-function screenshotTable() {
+/* function screenshotTable() {
     var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
     
     var rows = document.querySelectorAll('#routesTable tbody tr');
@@ -499,7 +499,65 @@ function screenshotTable() {
         }
     });
 }
+*/
 
+function screenshotTable() {
+    var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+    
+    var rows = document.querySelectorAll('#routesTable tbody tr');
+    var vis = [];
+    for (var i = 0; i < rows.length; i++) {
+        if (rows[i].style.display !== 'none' && !rows[i].classList.contains('completed')) vis.push(rows[i]);
+    }
+    if (vis.length === 0) { alert('Нет данных!'); return; }
+    
+    var t = document.createElement('table');
+    t.style.cssText = 'border-collapse:collapse;background:white;font-family:Arial;font-size:40px;position:absolute;left:-9999px;';
+    var h = '<thead><tr>';
+    ['№','Дата','Дата вып.','Откуда','Куда','Задача','Примечание'].forEach(function(x) {
+        h += '<th style="border:1px solid #999;padding:10px 14px;background:#4a7a8c;color:white;font-size:40px;">' + x + '</th>';
+    });
+    h += '</tr></thead><tbody>';
+    
+    for (var r = 0; r < vis.length; r++) {
+        var cells = vis[r].querySelectorAll('td');
+        h += '<tr>';
+        var rowEl = vis[r];
+        var rowBg = '';
+        if (rowEl.style.backgroundColor && rowEl.style.backgroundColor !== 'transparent' && rowEl.style.backgroundColor !== '') {
+            rowBg = 'background:' + rowEl.style.backgroundColor + ';';
+        } else {
+            rowBg = r % 2 === 0 ? 'background:#f9f9f9;' : '';
+        }
+        for (var c = 0; c < 7; c++) {
+            var text = cells[c] ? cells[c].textContent.trim() : '';
+            var nowrap = c <= 2 ? 'white-space:nowrap;' : 'white-space:normal;word-wrap:break-word;';
+            h += '<td style="border:1px solid #ddd;padding:8px 12px;font-size:40px;' + rowBg + nowrap + '">' + text + '</td>';
+        }
+        h += '</tr>';
+    }
+    h += '</tbody>';
+    t.innerHTML = h;
+    document.body.appendChild(t);
+    
+    html2canvas(t, { backgroundColor: '#fff', scale: 2 }).then(function(canvas) {
+        document.body.removeChild(t);
+        
+        if (isFirefox) {
+            var link = document.createElement('a');
+            link.download = 'Маршруты_' + new Date().toISOString().slice(0,10) + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            alert('Скриншот сохранен! Отправьте файл в Telegram.');
+        } else {
+            canvas.toBlob(function(blob) {
+                navigator.clipboard.write([new ClipboardItem({'image/png': blob})]).then(function() {
+                    alert('Скопировано в буфер! Вставьте в Telegram (Ctrl+V)');
+                });
+            });
+        }
+    });
+}
 function copyAsFormattedText() {
     var rows = document.querySelectorAll('#routesTable tbody tr');
     var text = '';
