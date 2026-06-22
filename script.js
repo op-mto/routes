@@ -129,6 +129,7 @@ function saveRoute() {
         from: from, to: to, task: task,
         note: document.getElementById('note').value || '',
         status: document.getElementById('status').value || 'Активно',
+        priority: document.getElementById('priority') ? document.getElementById('priority').value : '0',
         internalComment: document.getElementById('internalComment').value || '',
         createdBy: currentUser ? currentUser.name : '',
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
@@ -171,7 +172,13 @@ function renderTable() {
         if (searchTerm && (r.task+' '+r.from+' '+r.to+' '+r.note).toLowerCase().indexOf(searchTerm) === -1) continue;
         
         var sc = { 'Активно':'status-active', 'Ожидание':'status-waiting', 'Выполнено':'status-completed' }[r.status] || '';
-        html += '<tr' + (r.status==='Выполнено'?' class="completed"':'') + '>';
+        if (r.priority === '1') {
+    html += '<tr style="background:#fff9c4;">';
+} else if (r.status === 'Выполнено') {
+    html += '<tr class="completed">';
+} else {
+    html += '<tr>';
+}
         var dateFormatted = r.date ? r.date.slice(8,10) + '.' + r.date.slice(5,7) + '.' + r.date.slice(2,4) : '';
 var complDateFormatted = r.completionDate ? r.completionDate.slice(8,10) + '.' + r.completionDate.slice(5,7) + '.' + r.completionDate.slice(2,4) : '';
 html += '<td>' + r.id + '</td><td>' + dateFormatted + '</td><td>' + complDateFormatted + '</td>';
