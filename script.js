@@ -187,7 +187,7 @@ html += '<td>' + r.id + '</td><td>' + dateFormatted + '</td><td>' + complDateFor
         if (r.task && r.task.indexOf('Globus ') === 0) {
             html += '<a href="#" onclick="openMTKFromLink(\'' + r.id + '\'); return false;" style="color:#1976D2;text-decoration:underline;cursor:pointer;">' + r.task + '</a>';
         } else {
-            html += '<span style="cursor:pointer;color:#1976D2;" onclick="copyTask(\'' + (r.task||'').replace(/'/g, "\\'") + '\')" title="Копировать">' + (r.task||'') + '</span>';
+            html += '<span style="cursor:pointer;color:#1976D2;" onclick="copyTask(this.innerText)" title="Копировать">' + (r.task||'') + '</span>';
         }
         html += '</td><td>' + (r.note||'') + '</td>';
         html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
@@ -663,21 +663,21 @@ function copyAsFormattedText() {
     alert('Скопировано!\nВставьте в Telegram (Ctrl+V)');
 }
 function copyTask(text) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(function() {
-            alert('Задача скопирована!');
-        });
-    } else {
-        var tmp = document.createElement('textarea');
-        tmp.value = text;
-        tmp.style.position = 'fixed';
-        tmp.style.left = '-9999px';
-        document.body.appendChild(tmp);
-        tmp.select();
+    var tmp = document.createElement('textarea');
+    tmp.value = text;
+    tmp.style.position = 'fixed';
+    tmp.style.left = '-9999px';
+    tmp.style.top = '0';
+    document.body.appendChild(tmp);
+    tmp.focus();
+    tmp.select();
+    try {
         document.execCommand('copy');
-        document.body.removeChild(tmp);
         alert('Задача скопирована!');
+    } catch(e) {
+        alert('Не удалось скопировать');
     }
+    document.body.removeChild(tmp);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
