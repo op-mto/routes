@@ -24,28 +24,27 @@
     <div class="container">
         <h2>Редактирование маршрута</h2>
         
-        <div class="row">
-            <div><label>Дата:</label><input type="date" id="date"></div>
-            <div><label>Дата вып.:</label><input type="date" id="completionDate"></div>
-            <label>Приоритет:</label>
-<select id="priority">
-    <option value="0">Обычный</option>
-    <option value="1">⭐ Высокий</option>
-</select>
-            <div><label>Статус:</label>
-                <select id="status">
-                    <option value="Активно">Активно</option>
-                    <option value="Ожидание">Ожидание</option>
-                    <option value="Выполнено">Выполнено</option>
-                </select>
-                
-            </div>
-        </div>
-        
-        <div class="row">
-            <div><label>Откуда:</label><input type="text" id="from"></div>
-            <div><label>Куда:</label><input type="text" id="to"></div>
-        </div>
+<div class="row">
+    <div><label>Дата:</label><input type="text" id="date" placeholder="ДД.ММ.ГГГГ"></div>
+    <div><label>Дата вып.:</label><input type="text" id="completionDate" placeholder="ДД.ММ.ГГГГ"></div>
+    <div><label>Статус:</label>
+        <select id="status" style="padding:7px;">
+            <option value="Активно">Активно</option>
+            <option value="Ожидание">Ожидание</option>
+            <option value="Выполнено">Выполнено</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <div><label>Приоритет:</label>
+        <select id="priority">
+            <option value="0">Обычный</option>
+            <option value="1">⭐ Высокий</option>
+        </select>
+    </div>
+    <div><label>Откуда:</label><input type="text" id="from"></div>
+    <div><label>Куда:</label><input type="text" id="to"></div>
+</div>
         
         <label>Задача:</label>
         <textarea id="task" rows="3"></textarea>
