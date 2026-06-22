@@ -38,6 +38,7 @@ function load() {
                         document.getElementById('task').value = r.task || '';
                         document.getElementById('note').value = r.note || '';
                         document.getElementById('status').value = r.status || 'Активно';
+                        document.getElementById('priority').value = r.priority || '0';
                         document.getElementById('internalComment').value = r.internalComment || '';
                         
                         // Блокируем задачу если из бланка
@@ -97,6 +98,7 @@ function save() {
                     if (!document.getElementById('task').disabled) data.routes[i].task = task;
                     data.routes[i].note = document.getElementById('note').value || '';
                     data.routes[i].status = document.getElementById('status').value;
+                    data.routes[i].priority = document.getElementById('priority').value;
                     data.routes[i].internalComment = document.getElementById('internalComment').value || '';
                     data.routes[i].updatedAt = getCurrentDateTime();
                     break;
