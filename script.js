@@ -187,7 +187,7 @@ html += '<td>' + r.id + '</td><td>' + dateFormatted + '</td><td>' + complDateFor
         if (r.task && r.task.indexOf('Globus ') === 0) {
             html += '<a href="#" onclick="openMTKFromLink(\'' + r.id + '\'); return false;" style="color:#1976D2;text-decoration:underline;cursor:pointer;">' + r.task + '</a>';
         } else {
-            html += (r.task||'');
+            html += '<span style="cursor:pointer;color:#1976D2;" onclick="copyTask(\'' + (r.task||'').replace(/'/g, "\\'") + '\')" title="Копировать">' + (r.task||'') + '</span>';
         }
         html += '</td><td>' + (r.note||'') + '</td>';
         html += '<td class="' + sc + '">' + (r.status||'') + '</td>';
