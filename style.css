@@ -41,6 +41,12 @@ tr.completed { background: #e8f5e9; opacity: 0.7; }
 .status-waiting { color: #F57C00; font-weight: bold; }
 .status-completed { color: #388E3C; font-weight: bold; }
 
+td:nth-child(7), td:nth-child(9) {
+    white-space: normal;
+    word-wrap: break-word;
+    max-width: 200px;
+}
+
 /* Адаптация для смартфонов */
 @media (max-width: 768px) {
     body { padding: 5px; }
