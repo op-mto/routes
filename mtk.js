@@ -2,6 +2,8 @@ var FIREBASE_URL = 'https://routes-ef3a9-default-rtdb.asia-southeast1.firebaseda
 var blankId = null;
 var blankData = null;
 var userRole = '';
+/*для блокировки бланка мтк*/
+var isLocked = false;
 
 function getParam(name) { var url = new URL(window.location.href); return url.searchParams.get(name); }
 
@@ -272,10 +274,33 @@ function downloadXLSX() {
                     a.download = blankData.name;
                     a.click();
                     alert('Файл сохранен!');
+                    /*для блокировки бланка мтк*/
+                    lockForm();
+                    /*для блокировки бланка мтк*/
                 });
             });
         }
     };
     xhr.send();
+}
+/*для блокировки бланка мтк*/
+
+function lockForm() {
+    isLocked = true;
+    var inputs = document.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
+    document.getElementById('btnSave').style.display = 'none';
+    document.getElementById('btnAdd').style.display = 'none';
+    document.getElementById('btnUnlock').style.display = 'inline-block';
+}
+
+function unlockForm() {
+    if (userRole === 'driver') { alert('Водитель не может редактировать!'); return; }
+    isLocked = false;
+    var inputs = document.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) inputs[i].disabled = false;
+    document.getElementById('btnSave').style.display = 'inline-block';
+    document.getElementById('btnAdd').style.display = 'inline-block';
+    document.getElementById('btnUnlock').style.display = 'none';
 }
 loadBlank();
