@@ -594,7 +594,7 @@ function screenshotTable() {
         for (var c = 0; c < 8; c++) {
             var text = cells[c] ? cells[c].textContent.trim() : '';
             var nowrap = c <= 2 ? 'white-space:nowrap;' : 'white-space:normal;word-wrap:break-word;';
-h += '<td style="border:1px solid #ddd;padding:8px 12px;font-size:40px;line-height:1.3;' + rowBg + nowrap + '">' + text + '</td>';
+h += '<td style="border:1px solid #ddd;padding:8px 12px;font-size:40px;line-height:1.2;' + rowBg + nowrap + '">' + text + '</td>';
         }
         h += '</tr>';
     }
