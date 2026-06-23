@@ -236,47 +236,46 @@ function downloadXLSX() {
     
     xhr.onload = function() {
         if (xhr.status === 200) {
-            var workbook = XLSX.read(xhr.response, { type: 'array' });
-            var sheet = workbook.Sheets[workbook.SheetNames[0]];
-            
-            // A17 — имя бланка без Globus_ и без .xlsx
-            var cleanName = blankData.name.replace('Globus_', '').replace('.xlsx', '');
-            sheet['A17'] = { v: cleanName };
-            
-            // A19 — текущая дата ДД.ММ.ГГГГ
-            var today = new Date();
-            var dd = String(today.getDate()).padStart(2, '0');
-            var mm = String(today.getMonth() + 1).padStart(2, '0');
-            var yyyy = today.getFullYear();
-            sheet['A19'] = { v: dd + '.' + mm + '.' + yyyy };
-            
-            // Заполняем запчасти начиная с 22 строки
-            var rows = document.querySelectorAll('#mtkBody tr');
-            for (var i = 0; i < rows.length; i++) {
-                var inputs = rows[i].querySelectorAll('input');
-                var rowNum = 22 + i;
+            var workbook = new ExcelJS.Workbook();
+            workbook.xlsx.load(xhr.response).then(function() {
+                var sheet = workbook.getWorksheet(1);
                 
-                // Столбцы в том же порядке что в бланке:
-                // A - № п/п, B - Номер детали, C - Наименование, D - Кол-во, E - Кому
-                sheet['A' + rowNum] = { v: i + 1 };                           // № п/п
-                sheet['B' + rowNum] = { v: inputs[0]?.value || '' };          // Номер детали
-                sheet['C' + rowNum] = { v: inputs[1]?.value || '' };          // Наименование
-                sheet['D' + rowNum] = { v: inputs[2]?.value || '' };          // Кол-во
-                sheet['E' + rowNum] = { v: inputs[3]?.value || '' };          // Кому
-            }
-            
-            // Сохраняем
-            var wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            var blob = new Blob([wbout], { type: 'application/vnd.ms-excel' });
-            var a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = blankData.name;
-            a.click();
-            
-            alert('Файл сохранен!');
+                // A17 — имя бланка без Globus_ и без .xlsx
+                var cleanName = blankData.name.replace('Globus_', '').replace('.xlsx', '');
+                sheet.getCell('A17').value = cleanName;
+                
+                // A19 — текущая дата ДД.ММ.ГГГГ
+                var today = new Date();
+                var dd = String(today.getDate()).padStart(2, '0');
+                var mm = String(today.getMonth() + 1).padStart(2, '0');
+                var yyyy = today.getFullYear();
+                sheet.getCell('A19').value = dd + '.' + mm + '.' + yyyy;
+                
+                // Заполняем запчасти с 22 строки
+                var rows = document.querySelectorAll('#mtkBody tr');
+                for (var i = 0; i < rows.length; i++) {
+                    var inputs = rows[i].querySelectorAll('input');
+                    var rowNum = 22 + i;
+                    
+                    sheet.getCell('A' + rowNum).value = i + 1;
+                    sheet.getCell('B' + rowNum).value = inputs[0]?.value || '';
+                    sheet.getCell('C' + rowNum).value = inputs[1]?.value || '';
+                    sheet.getCell('D' + rowNum).value = inputs[2]?.value || '';
+                    sheet.getCell('E' + rowNum).value = inputs[3]?.value || '';
+                }
+                
+                // Сохраняем
+                workbook.xlsx.writeBuffer().then(function(buffer) {
+                    var blob = new Blob([buffer], { type: 'application/vnd.ms-excel' });
+                    var a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = blankData.name;
+                    a.click();
+                    alert('Файл сохранен!');
+                });
+            });
         }
     };
     xhr.send();
 }
-
 loadBlank();
