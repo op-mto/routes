@@ -182,7 +182,7 @@ function renderTable() {
         var dateFormatted = r.date ? r.date.slice(8,10) + '.' + r.date.slice(5,7) + '.' + r.date.slice(2,4) : '';
 var complDateFormatted = r.completionDate ? r.completionDate.slice(8,10) + '.' + r.completionDate.slice(5,7) + '.' + r.completionDate.slice(2,4) : '';
 html += '<td>' + r.id + '</td><td>' + dateFormatted + '</td><td>' + complDateFormatted + '</td>';
-        html += '<td>' + (r.from||'') + '</td><td>' + (r.to||'') + '</td>';
+        html += '<td style="white-space:normal;word-wrap:break-word;max-width:100px;">' + (r.from||'') + '</td><td style="white-space:normal;word-wrap:break-word;max-width:100px;">' + (r.to||'') + '</td>';
         html += '<td>';
         if (r.task && r.task.indexOf('Globus ') === 0) {
             html += '<a href="#" onclick="openMTKFromLink(\'' + r.id + '\'); return false;" style="color:#1976D2;text-decoration:underline;cursor:pointer;">' + r.task + '</a>';
