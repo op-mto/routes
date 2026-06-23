@@ -47,6 +47,11 @@ td:nth-child(7), td:nth-child(9) {
     max-width: 200px;
 }
 
+td:nth-child(4), td:nth-child(5) {
+    white-space: normal;
+    word-wrap: break-word;
+}
+
 /* Адаптация для смартфонов */
 @media (max-width: 768px) {
     body { padding: 5px; }
