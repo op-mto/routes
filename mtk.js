@@ -28,9 +28,17 @@ function loadBlank() {
                             blankData = data.mtkBlanks[i];
                             document.getElementById('title').textContent = 'Бланк: ' + blankData.name;
                             document.getElementById('fileName').textContent = blankData.name;
+                            /*
                             renderRows(blankData.items);
                             if (userRole === 'driver') disableInputs();
-                            return;
+                            return;*/
+                            renderRows(blankData.items);
+if (userRole === 'driver') {
+    disableInputs();
+} else if (blankData.locked) {
+    lockForm();
+}
+return;
                         }
                     }
                 }
@@ -285,8 +293,19 @@ function downloadXLSX() {
 }
 /*для блокировки бланка мтк*/
 
+ /*function lockForm() {
+    isLocked = true;
+    var inputs = document.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
+    document.getElementById('btnSave').style.display = 'none';
+    document.getElementById('btnAdd').style.display = 'none';
+    document.getElementById('btnUnlock').style.display = 'inline-block';
+}*/
+
 function lockForm() {
     isLocked = true;
+    blankData.locked = true;
+    saveBlankState();
     var inputs = document.querySelectorAll('input');
     for (var i = 0; i < inputs.length; i++) inputs[i].disabled = true;
     document.getElementById('btnSave').style.display = 'none';
@@ -294,7 +313,7 @@ function lockForm() {
     document.getElementById('btnUnlock').style.display = 'inline-block';
 }
 
-function unlockForm() {
+/*function unlockForm() {
     if (userRole === 'driver') { alert('Водитель не может редактировать!'); return; }
     isLocked = false;
     var inputs = document.querySelectorAll('input');
@@ -302,5 +321,41 @@ function unlockForm() {
     document.getElementById('btnSave').style.display = 'inline-block';
     document.getElementById('btnAdd').style.display = 'inline-block';
     document.getElementById('btnUnlock').style.display = 'none';
+}*/
+function unlockForm() {
+    if (userRole !== 'admin') { 
+        alert('Только администратор может разблокировать!'); 
+        return; 
+    }
+    isLocked = false;
+    blankData.locked = false;
+    saveBlankState();
+    var inputs = document.querySelectorAll('input');
+    for (var i = 0; i < inputs.length; i++) inputs[i].disabled = false;
+    document.getElementById('btnSave').style.display = 'inline-block';
+    document.getElementById('btnAdd').style.display = 'inline-block';
+    document.getElementById('btnUnlock').style.display = 'none';
+}
+function saveBlankState() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', FIREBASE_URL + '/data.json', true);
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            var data = JSON.parse(xhr.responseText);
+            if (data && data.mtkBlanks) {
+                for (var i = 0; i < data.mtkBlanks.length; i++) {
+                    if (data.mtkBlanks[i].id === blankData.id) {
+                        data.mtkBlanks[i].locked = blankData.locked;
+                        break;
+                    }
+                }
+                var xhr2 = new XMLHttpRequest();
+                xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
+                xhr2.setRequestHeader('Content-Type', 'application/json');
+                xhr2.send(JSON.stringify(data));
+            }
+        }
+    };
+    xhr.send();
 }
 loadBlank();
