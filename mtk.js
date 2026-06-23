@@ -43,11 +43,22 @@ function loadBlank() {
         var xhr2 = new XMLHttpRequest();
         xhr2.open('GET', FIREBASE_URL + '/data.json', true);
         xhr2.onload = function() {
-            var counter = 1;
+            /*var counter = 1;
             if (xhr2.status === 200) {
                 var data = JSON.parse(xhr2.responseText);
                 if (data && data.settings) counter = data.settings.mtkCounter || 1;
-            }
+            }*/
+            var counter = 1;
+if (xhr2.status === 200) {
+    var data = JSON.parse(xhr2.responseText);
+    if (data && data.settings) {
+        if (data.settings.mtkDate !== today) {
+            counter = 1;
+        } else {
+            counter = data.settings.mtkCounter || 1;
+        }
+    }
+}
             var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
             blankData = { id: counter, name: fileName, items: [] };
             document.getElementById('title').textContent = 'Новый бланк: ' + fileName;
@@ -169,7 +180,11 @@ function saveBlank() {
             }
             if (!found) {
                 data.mtkBlanks.push({ id: blankData.id, name: blankData.name, items: items });
-                if (data.settings) data.settings.mtkCounter = blankData.id + 1;
+               /* if (data.settings) data.settings.mtkCounter = blankData.id + 1;*/
+                if (data.settings) {
+    data.settings.mtkCounter = blankData.id + 1;
+    data.settings.mtkDate = new Date().toISOString().slice(0,10);
+}
             }
             
             // Сохраняем в Firebase
