@@ -25,6 +25,7 @@
         .btn-copy:hover { background: #7B1FA2; }
         .btn-del { background: #ff9800; color: white; padding: 3px 8px; font-size: 12px; }
     </style>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>    
 </head>
 <body>
     <div class="container">
@@ -48,6 +49,7 @@
         <div style="margin-bottom: 15px;">
             <button onclick="addRow()" class="btn-add" id="btnAdd">+ Добавить строку</button>
             <button onclick="copyTable()" class="btn-copy">📋 Копировать таблицу</button>
+            <button onclick="downloadXLSX()" class="btn-save">📥 Скачать XLSX</button>
         </div>
         
         <div>
