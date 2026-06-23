@@ -52,6 +52,18 @@ td:nth-child(4), td:nth-child(5) {
     word-wrap: break-word;
 }
 
+#routesTable td {
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+#routesTable td:nth-child(1),
+#routesTable td:nth-child(2),
+#routesTable td:nth-child(3) {
+    white-space: nowrap !important;
+}
+
 /* Адаптация для смартфонов */
 @media (max-width: 768px) {
     body { padding: 5px; }
