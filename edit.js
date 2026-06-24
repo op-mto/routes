@@ -112,6 +112,19 @@ if (document.getElementById('status').value === 'Выполнено') {
         details: ''
     });
 }
+
+                    // Запись в историю для любого редактирования
+                    if (!data.history) data.history = [];
+                    var now = new Date();
+                    var dt = String(now.getDate()).padStart(2,'0') + '.' + String(now.getMonth()+1).padStart(2,'0') + '.' + now.getFullYear() + ' ' +
+                             String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
+                    data.history.unshift({
+                        time: dt,
+                        user: getParam('user') || 'Система',
+                        action: 'Редактирование',
+                        routeId: parseInt(routeId),
+                        details: task
+                    });
                     
                     data.routes[i].priority = document.getElementById('priority').value;
                     data.routes[i].internalComment = document.getElementById('internalComment').value || '';
