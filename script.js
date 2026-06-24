@@ -141,9 +141,10 @@ function saveRoute() {
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
     });
 // для записи журнала
+    data.settings.nextRouteId++;
     addHistory('Создание', data.settings.nextRouteId - 1, task);
     
-    data.settings.nextRouteId++;
+    // data.settings.nextRouteId++;
     saveData(); updateAddressHistory(); clearForm(); renderTable();
     alert('Маршрут сохранен!');
 }
@@ -267,6 +268,10 @@ function editRoute(id) {
 /* эта на отдельной */
 function editRoute(id) {
     var role = currentUser ? currentUser.role : '';
+    // ДОБАВИЛ ДЛЯ ПЕРЕДАЧИ ИМЕНИ ПОЛЬЗОВАТЕЛЯ В ЗАПИСИ ЖУРНАЛА ИМЕНИ ПОЛЬЗОВАТЕЛЯ КОТОРЫЙ РЕДАКТИРОВАЛ
+     var userName = currentUser ? currentUser.name : '';
+window.open('edit.html?id=' + id + '&role=' + role + '&user=' + encodeURIComponent(userName), 'edit_' + id, 'width=700,height=600');
+    
     window.open('edit.html?id=' + id + '&role=' + role, 'edit_' + id, 'width=700,height=600');
 }
 
