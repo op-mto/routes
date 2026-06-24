@@ -711,16 +711,19 @@ function showHistory() {
     var c = document.getElementById('historyTable');
     if (c.style.display === 'none') {
         c.style.display = 'block';
-        if (!data.history || data.history.length === 0) {
-            c.innerHTML = '<p>История пуста</p>';
-        } else {
-            var h = '<h4>Последние изменения:</h4>';
-            for (var i = 0; i < data.history.length; i++) {
-                var e = data.history[i];
-                h += '<div class="history-row"><b>' + e.user + '</b> — ' + e.action + ' №' + e.routeId + '<br><small>' + e.time + ' | ' + (e.details||'') + '</small></div>';
+        // Загружаем свежую историю из Firebase
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', FIREBASE_URL + '/data.json?t=' + Date.now(), true);
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var freshData = JSON.parse(xhr.responseText);
+                if (freshData && freshData.history) {
+                    data.history = freshData.history;
+                }
+                renderHistory();
             }
-            c.innerHTML = h;
-        }
+        };
+        xhr.send();
     } else {
         c.style.display = 'none';
     }
