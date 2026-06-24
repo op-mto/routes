@@ -47,23 +47,18 @@ return;
         };
         xhr.send();
     } else {
-        var today = new Date().toISOString().slice(0, 10);
+       /* var today = new Date().toISOString().slice(0, 10);
         var day = today.slice(8, 10), month = today.slice(5, 7), year = today.slice(2, 4);
         
         var xhr2 = new XMLHttpRequest();
         xhr2.open('GET', FIREBASE_URL + '/data.json', true);
         xhr2.onload = function() {
-            /*var counter = 1;
-            if (xhr2.status === 200) {
-                var data = JSON.parse(xhr2.responseText);
-                if (data && data.settings) counter = data.settings.mtkCounter || 1;
-            }*/
-            var counter = 1;
-if (xhr2.status === 200) {
-    var data = JSON.parse(xhr2.responseText);
-    if (data && data.settings) {
-        if (data.settings.mtkDate !== today) {
-            counter = 1;
+          var counter = 1;
+           if (xhr2.status === 200) {
+           var data = JSON.parse(xhr2.responseText);
+           if (data && data.settings) {
+             if (data.settings.mtkDate !== today) {
+                counter = 1;
         } else {
             counter = data.settings.mtkCounter || 1;
         }
@@ -75,7 +70,12 @@ if (xhr2.status === 200) {
             document.getElementById('fileName').textContent = fileName;
             addRow(); addRow(); addRow();
         };
-        xhr2.send();
+        xhr2.send();*/
+        blankData = { id: null, name: '', items: [] };
+        document.getElementById('title').textContent = 'Новый бланк';
+        document.getElementById('fileName').textContent = '';
+        addRow(); addRow(); addRow();
+        
     }
 }
 
@@ -161,6 +161,24 @@ function saveBlank() {
                          String(now.getMinutes()).padStart(2,'0') + ':' + 
                          String(now.getSeconds()).padStart(2,'0');
                 
+               // Получаем свежий счётчик при сохранении
+if (!blankData.id) {
+    var today = new Date().toISOString().slice(0,10);
+    var day = today.slice(8,10), month = today.slice(5,7), year = today.slice(2,4);
+    if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
+    var counter = data.settings.mtkCounter || 1;
+    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
+    blankData.id = counter;
+    blankData.name = fileName;
+    data.settings.mtkCounter = counter + 1;
+    document.getElementById('title').textContent = 'Бланк: ' + fileName;
+    document.getElementById('fileName').textContent = fileName;
+}
+                
+               // конец  Получаем свежий счётчик при сохранении
+                
+                
+                
                 data.routes.push({
                     id: data.settings.nextRouteId,
                     date: new Date().toISOString().slice(0, 10),
@@ -240,6 +258,9 @@ function copyTable() {
     }
 }
 function downloadXLSX() {
+    if (!blankData.name) {
+        alert('Сначала сохраните бланк!');
+        return;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'template.xlsx', true);
     xhr.responseType = 'arraybuffer';
