@@ -272,7 +272,7 @@ function editRoute(id) {
      var userName = currentUser ? currentUser.name : '';
 window.open('edit.html?id=' + id + '&role=' + role + '&user=' + encodeURIComponent(userName), 'edit_' + id, 'width=700,height=600');
     
-    window.open('edit.html?id=' + id + '&role=' + role, 'edit_' + id, 'width=700,height=600');
+  //  window.open('edit.html?id=' + id + '&role=' + role, 'edit_' + id, 'width=700,height=600');
 }
 
 function updateRoute(id) {
