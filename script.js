@@ -729,6 +729,21 @@ function showHistory() {
     }
 }
 
+function renderHistory() {
+    var c = document.getElementById('historyTable');
+    if (!c || c.style.display === 'none') return;
+    if (!data.history || data.history.length === 0) {
+        c.innerHTML = '<p>История пуста</p>';
+    } else {
+        var h = '<h4>Последние изменения:</h4>';
+        for (var i = 0; i < data.history.length; i++) {
+            var e = data.history[i];
+            h += '<div class="history-row"><b>' + e.user + '</b> — ' + e.action + ' №' + e.routeId + '<br><small>' + e.time + ' | ' + (e.details||'') + '</small></div>';
+        }
+        c.innerHTML = h;
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
