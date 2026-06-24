@@ -192,7 +192,7 @@ if (!blankData.id) {
                     createdBy: getParam('user') || 'Диспетчер',
                     createdAt: dt,
                     updatedAt: dt,
-                    createdBy: getParam('user') || 'Диспетчер',
+                    // createdBy: getParam('user') || 'Диспетчер',
                 });
                 data.settings.nextRouteId++;
             }
@@ -261,6 +261,7 @@ function downloadXLSX() {
     if (!blankData.name) {
         alert('Сначала сохраните бланк!');
         return;
+    }
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'template.xlsx', true);
     xhr.responseType = 'arraybuffer';
