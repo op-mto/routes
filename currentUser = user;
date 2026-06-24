@@ -134,6 +134,9 @@ function saveRoute() {
         createdBy: currentUser ? currentUser.name : '',
         createdAt: now, updatedAt: now, updatedBy: currentUser ? currentUser.name : ''
     });
+// для записи журнала
+    addHistory('Создание', data.settings.nextRouteId - 1, task);
+    
     data.settings.nextRouteId++;
     saveData(); updateAddressHistory(); clearForm(); renderTable();
     alert('Маршрут сохранен!');
@@ -218,6 +221,8 @@ function completeRoute(id) {
         if (data.routes[i].id === id) {
             data.routes[i].status = 'Выполнено';
             data.routes[i].completionDate = new Date().toISOString().slice(0, 10);
+            //для записи журнала
+            addHistory('Выполнение', id, '');
             break;
         }
     }
@@ -287,6 +292,9 @@ function updateRoute(id) {
             data.routes[i].internalComment = document.getElementById('internalComment').value || '';
             data.routes[i].updatedAt = getCurrentDateTime();
             data.routes[i].updatedBy = currentUser ? currentUser.name : '';
+            // для записи журнала
+            addHistory('Редактирование', id, task);
+            
             break;
         }
     }
@@ -301,7 +309,10 @@ function updateRoute(id) {
 
 function deleteRoute(id) {
     if (!currentUser || currentUser.role !== 'admin') { alert('Только администратор!'); return; }
-    if (confirm('Удалить?')) { data.routes = data.routes.filter(function(r){return r.id !== id;}); saveData(); renderTable(); }
+    if (confirm('Удалить?'))
+    //для записи журнала
+     addHistory('Удаление', id, '');   
+    { data.routes = data.routes.filter(function(r){return r.id !== id;}); saveData(); renderTable(); }
 }
 
 function toggleCompleted() {
@@ -679,6 +690,39 @@ function copyTask(text) {
     }
     document.body.removeChild(tmp);
 }
+
+function addHistory(action, routeId, details) {
+    if (!data.history) data.history = [];
+    data.history.unshift({
+        time: getCurrentDateTime(),
+        user: currentUser ? currentUser.name : 'Система',
+        action: action,
+        routeId: routeId,
+        details: details
+    });
+    if (data.history.length > 100) data.history.pop();
+    saveData();
+}
+
+function showHistory() {
+    var c = document.getElementById('historyTable');
+    if (c.style.display === 'none') {
+        c.style.display = 'block';
+        if (!data.history || data.history.length === 0) {
+            c.innerHTML = '<p>История пуста</p>';
+        } else {
+            var h = '<h4>Последние изменения:</h4>';
+            for (var i = 0; i < data.history.length; i++) {
+                var e = data.history[i];
+                h += '<div class="history-row"><b>' + e.user + '</b> — ' + e.action + ' №' + e.routeId + '<br><small>' + e.time + ' | ' + (e.details||'') + '</small></div>';
+            }
+            c.innerHTML = h;
+        }
+    } else {
+        c.style.display = 'none';
+    }
+}
+
 
 document.addEventListener('DOMContentLoaded', function() {
     loadData();
