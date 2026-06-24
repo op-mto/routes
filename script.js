@@ -32,6 +32,9 @@ function loadData() {
                 if (loaded && loaded.users) data.users = loaded.users;
                 if (loaded && loaded.settings) data.settings = loaded.settings;
                 if (loaded && loaded.mtkBlanks) data.mtkBlanks = loaded.mtkBlanks;
+                //добавлено изза водитель когда входит журнал слетает
+                if (loaded && loaded.history) data.history = loaded.history;
+                
             } catch(e) {}
         }
         if (!data.routes) data.routes = [];
