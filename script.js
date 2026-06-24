@@ -92,6 +92,9 @@ function login() {
     }
     if (user) {
         currentUser = user;
+        //для записи журнала
+        addHistory('Вход в систему', 0, user.name);
+        
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('mainScreen').style.display = 'block';
         document.getElementById('userName').textContent = user.name;
