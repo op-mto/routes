@@ -141,7 +141,21 @@ function saveBlank() {
             if (!data.mtkBlanks) data.mtkBlanks = [];
             if (!data.routes) data.routes = [];
             if (!data.settings) data.settings = { nextRouteId: 1 };
-            
+
+            // Получаем свежий счётчик при сохранении
+if (!blankData.id) {
+    var today = new Date().toISOString().slice(0,10);
+    var day = today.slice(8,10), month = today.slice(5,7), year = today.slice(2,4);
+    if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
+    var counter = data.settings.mtkCounter || 1;
+    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
+    blankData.id = counter;
+    blankData.name = fileName;
+    data.settings.mtkCounter = counter + 1;
+    document.getElementById('title').textContent = 'Бланк: ' + fileName;
+    document.getElementById('fileName').textContent = fileName;
+}
+// конец  Получаем свежий счётчик при сохранении            
             // Проверяем есть ли уже маршрут
             var routeExists = false;
             for (var i = 0; i < data.routes.length; i++) {
@@ -161,19 +175,7 @@ function saveBlank() {
                          String(now.getMinutes()).padStart(2,'0') + ':' + 
                          String(now.getSeconds()).padStart(2,'0');
                 
-               // Получаем свежий счётчик при сохранении
-if (!blankData.id) {
-    var today = new Date().toISOString().slice(0,10);
-    var day = today.slice(8,10), month = today.slice(5,7), year = today.slice(2,4);
-    if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
-    var counter = data.settings.mtkCounter || 1;
-    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + counter + '.xlsx';
-    blankData.id = counter;
-    blankData.name = fileName;
-    data.settings.mtkCounter = counter + 1;
-    document.getElementById('title').textContent = 'Бланк: ' + fileName;
-    document.getElementById('fileName').textContent = fileName;
-}
+              
                 
                // конец  Получаем свежий счётчик при сохранении
                 
