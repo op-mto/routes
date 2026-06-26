@@ -221,8 +221,10 @@ if (!blankData.id) {
             var xhr2 = new XMLHttpRequest();
             xhr2.open('PUT', FIREBASE_URL + '/data.json', true);
             xhr2.setRequestHeader('Content-Type', 'application/json');
+            console.log('mtkBlanks перед отправкой:', data.mtkBlanks.length, 'новый бланк:', blankData.id);
             xhr2.send(JSON.stringify(data));
             xhr2.onload = function() {
+                console.log('Firebase ответ:', xhr2.status);
                 alert('Сохранено!');
                 if (window.opener && !window.opener.closed) {
                     window.opener.clearForm();
