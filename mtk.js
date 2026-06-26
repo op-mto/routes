@@ -143,7 +143,7 @@ function saveBlank() {
             if (!data.settings) data.settings = { nextRouteId: 1 };
 
             // Получаем свежий счётчик при сохранении
-if (!blankData.id) {
+/* if (!blankData.id) {
     var today = new Date().toISOString().slice(0,10);
     var day = today.slice(8,10), month = today.slice(5,7), year = today.slice(2,4);
     if (data.settings.mtkDate !== today) { data.settings.mtkCounter = 1; data.settings.mtkDate = today; }
@@ -152,6 +152,32 @@ if (!blankData.id) {
     blankData.id = counter;
     blankData.name = fileName;
     data.settings.mtkCounter = counter + 1;
+    document.getElementById('title').textContent = 'Бланк: ' + fileName;
+    document.getElementById('fileName').textContent = fileName;
+}*/
+            if (!blankData.id) {
+    var today = new Date().toISOString().slice(0,10);
+    var day = today.slice(8,10), month = today.slice(5,7), year = today.slice(2,4);
+    
+    // Сбрасываем дневной счётчик для имени файла
+    if (data.settings.mtkDate !== today) { 
+        data.settings.mtkDailyCounter = 1; 
+        data.settings.mtkDate = today; 
+    }
+    if (!data.settings.mtkDailyCounter) data.settings.mtkDailyCounter = 1;
+    
+    var dailyCounter = data.settings.mtkDailyCounter;
+    var fileName = 'Globus_' + day + '.' + month + '.' + year + '_' + dailyCounter + '.xlsx';
+    
+    // ID бланка всегда растёт, не сбрасывается
+    if (!data.settings.mtkGlobalId) data.settings.mtkGlobalId = data.settings.mtkCounter || 1;
+    blankData.id = data.settings.mtkGlobalId;
+    blankData.name = fileName;
+    
+    data.settings.mtkDailyCounter++;
+    data.settings.mtkGlobalId++;
+    data.settings.mtkCounter = data.settings.mtkGlobalId;
+    
     document.getElementById('title').textContent = 'Бланк: ' + fileName;
     document.getElementById('fileName').textContent = fileName;
 }
